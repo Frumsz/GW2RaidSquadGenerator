@@ -1,11 +1,11 @@
 package com.crossroadsinn.search;
 
+import com.crossroadsinn.problem.SquadComposition;
 import javafx.concurrent.Task;
-import com.crossroadsinn.problem.CSP;
 
-import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Task implementation of the GreedyBestFirstSearch algorithm.
@@ -13,12 +13,12 @@ import java.util.concurrent.TimeUnit;
  * @author Eren Bole.8720
  * @version 1.0
  */
-public class BestFirstSearchTask extends Task<CSP> implements SearchAlgorithm{
-    PriorityQueue<CSP> Q;
+public class AutoAssignTraineeTask extends Task<SquadComposition> {
+    PriorityQueue<SquadComposition> prioQueue;
     int nodes;
     int maxDurationInMillis = 60*1000;
 
-    public BestFirstSearchTask(CSP initialState) {
+    public AutoAssignTraineeTask(SquadComposition initialState) {
         init(initialState);
     }
 
@@ -26,14 +26,14 @@ public class BestFirstSearchTask extends Task<CSP> implements SearchAlgorithm{
      * Reset the search object with a new initial state.
      * @param initialState the new initial state.
      */
-    public void init(CSP initialState) {
-        Q = new PriorityQueue<>(50, CSPComparactors.sortByHeuristicComparator());
+    public void init(SquadComposition initialState) {
+        prioQueue = new PriorityQueue<>(50, Comparator.comparingInt(SquadComposition::heuristic));
         nodes = 0;
-        if ( Q.isEmpty() ) Q.add(initialState);
+        if ( prioQueue.isEmpty() ) prioQueue.add(initialState);
     }
 
     @Override
-    protected CSP call() {
+    protected SquadComposition call() {
         return solve();
     }
 
@@ -41,17 +41,17 @@ public class BestFirstSearchTask extends Task<CSP> implements SearchAlgorithm{
      * Look for solution by prioritizing lowest heuristics.
      * @return the solution if found, null otherwise.
      */
-    public CSP solve() {
+    public SquadComposition solve() {
         long startTime = System.currentTimeMillis();
-        while (!Q.isEmpty()) {
+        while (!prioQueue.isEmpty()) {
             if (isCancelled()) return null;
             if (System.currentTimeMillis() > startTime + maxDurationInMillis) return null;
-            if (Q.peek().isSolution()) {
-                return Q.peek();
+            if (prioQueue.peek().isSolution()) {
+                return prioQueue.peek();
             }
             ++nodes;
-            ArrayList<CSP> expandedNodes = Q.poll().getChildren();
-            Q.addAll(expandedNodes);
+            List<SquadComposition> expandedNodes = prioQueue.poll().getChildren();
+            prioQueue.addAll(expandedNodes);
         }
         // No solution found.
         return null;

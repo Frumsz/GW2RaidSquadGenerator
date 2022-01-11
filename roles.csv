@@ -1,0 +1,30 @@
+roleHandle,roleName,boons,specialRoles,commRole
+ctank,Chrono Tank,quickness:5,"tank",TRUE
+hfbtank,HFB Tank,quickness:5,"tank, healer",TRUE
+druid,Druid,,"healer,druid",TRUE
+hfb,Heal FB,quickness:5,healer,TRUE
+healscrapper,Heal Scrapper,quickness:5,healer,TRUE
+healtempest,Heal Tempest,,healer,TRUE
+qchrono,Quickchrono,quickness:5,,TRUE
+qrapper,Quick Scrapper,quickness:5,,TRUE
+qrappertank,"Qrapper (Tank)",quickness:5,tank,TRUE
+qfb,Quickbrand,quickness:5,,TRUE
+qfbtank,Quickbrand (Tank),quickness:5,"tank",TRUE
+alacgade,Alacrigade,alacrity:10,,TRUE
+scam,SCAM,alacrity:5,,TRUE
+rrrenegade,RR Renegade,alacrity:5,,TRUE
+banners,Banners,,banners,TRUE
+dps,DPS,,dps,TRUE
+qtpkitede,"Deadeye (Pylon)",,"dps,qtpkite",
+qtpkitescourge,"Scourge (Pylon)",,"dps,qtpkite",
+shpusher,"Druid (Pusher)",,"druid,healer,shpusher",
+dhuumkite,"Offheal (Kiter)",,"healer,dhuumkite",
+shepi,"Scourge (Epidemic)",,"dps,epi",
+mattreflect,"DPS (Reflect)",,"mattreflect",
+handkite,"Handkite",,"handkite",
+qadimkite,"DPS (Kiter)",,"qadimkite",
+qadimlamp,"DPS (Lamp)",,"qadimlamp",
+forcedctank,"Chrono Tank",quickness:5,"forcedctank, tank",
+hfbmattreflect,"Heal FB (Reflect)",quickness:5,"healer,mattreflect",
+qchronomattreflect,"QChrono (Reflect)",quickness:5,mattreflect,
+scammattreflect,"SCAM (Reflect)",alacrity:5,mattreflect,

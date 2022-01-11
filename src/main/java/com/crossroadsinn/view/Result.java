@@ -1,5 +1,8 @@
 package com.crossroadsinn.view;
 
+import com.crossroadsinn.problem.SquadComposition;
+import com.crossroadsinn.settings.Roles;
+import com.crossroadsinn.settings.Squads;
 import com.crossroadsinn.components.PlayerListCell;
 import com.crossroadsinn.components.PlayerListView;
 import com.crossroadsinn.components.RoleStatRow;
@@ -11,10 +14,9 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import jfxtras.styles.jmetro.JMetroStyleClass;
-import com.crossroadsinn.problem.SquadComposition;
 import com.crossroadsinn.problem.SquadPlan;
 import com.crossroadsinn.problem.SquadSolution;
-import com.crossroadsinn.search.BestFirstSearchTask;
+import com.crossroadsinn.search.AutoAssignTraineeTask;
 import com.crossroadsinn.signups.Player;
 import com.crossroadsinn.signups.SquadSaver;
 
@@ -45,7 +47,7 @@ public class Result extends BorderPane implements AppContent{
     RolesStatTable statsTable = new RolesStatTable(FXCollections.observableArrayList());
     Button saveBtn, autoFill;
     Label saveMsg;
-    BestFirstSearchTask solver;
+    AutoAssignTraineeTask solver;
     TextField compName;
     HashMap<String, RoleStatRow> stats = new HashMap<>();
     App parent;
@@ -102,10 +104,8 @@ public class Result extends BorderPane implements AppContent{
         players = Stream.of(parent.getSelectedTraineeList(), parent.getSelectedCommanderList())
                 .flatMap(Collection::stream).collect(Collectors.toCollection(ArrayList::new));
         if (solution != null) {
-            players = solution.getAssigned().stream().map(p -> {
-                players.get(p[0]).setAssignedRole(p[1]);
-                return players.get(p[0]);
-            }).collect(Collectors.toCollection(ArrayList::new));
+            solution.getAssigned().forEach(Player::setAssignedRole);
+            players = new ArrayList<>(solution.getAssigned().keySet());
         }
 
         squads.clear();
@@ -132,7 +132,7 @@ public class Result extends BorderPane implements AppContent{
      */
     public void cleanup() {
         for (Player player : players) {
-            player.setAssignedRole(null);
+            player.resetAssignedRole();
             player.clearRoleListener();
         }
         players.clear();
@@ -147,7 +147,7 @@ public class Result extends BorderPane implements AppContent{
         squadViews.getChildren().clear();
         if (solution != null) {
             for (int i = 0; i < solution.getNumSquads(); ++i) {
-                VBox squad = makeSquadDisplay(i);
+                VBox squad = makeSquadDisplay(i, Squads.getSquad(solution.getSquadTypes().get(i)).getSquadName());
                 squadViews.getChildren().add(squad);
             }
         } else {
@@ -157,10 +157,14 @@ public class Result extends BorderPane implements AppContent{
     }
 
     private VBox makeSquadDisplay(int squadIndex) {
+		return makeSquadDisplay(squadIndex, "Manual Squad");
+	}
+	
+    private VBox makeSquadDisplay(int squadIndex, String squadName) {
         VBox squad = new VBox(10);
         PlayerListView playerListView = new PlayerListView();
         squads.add(playerListView.getItems());
-        squad.getChildren().addAll(new Label("Squad " + (squadIndex+1)), playerListView);
+        squad.getChildren().addAll(new Label("Squad " + (squadIndex+1) + " - " + squadName), playerListView);
         squad.setAlignment(Pos.TOP_CENTER);
         HBox.setHgrow(squad, Priority.ALWAYS);
         return squad;
@@ -201,30 +205,34 @@ public class Result extends BorderPane implements AppContent{
      */
     private void generateStats() {
         stats.clear();
-        for (String role : Player.ROLES) stats.put(role, new RoleStatRow(role));
+        for (String role : Roles.getAllRolesAsStrings()){
+            stats.put(role, new RoleStatRow(role));
+        }
         for (Player player : players) {
-            if (player.getAssignedRole() == null) {
+            if (player.getAssignedRoleObj() == null) {
                 updateStatsClearedPlayer(player, null);
             } else updateStatsAssignedPlayer(player, false);
 
             player.setRoleListener((e, oldVal, newVal) -> {
-                if (newVal == null) updateStatsClearedPlayer(player, oldVal);
+                if (newVal == null){
+                    updateStatsClearedPlayer(player, oldVal);
+                }
                 else updateStatsAssignedPlayer(player, true);
             });
         }
     }
 
     private void updateStatsClearedPlayer(Player player, String oldValue) {
-        for (String availableRole : player.getSimpleRoleList()) {
+        for (String availableRole : player.getRolehandleList()) {
             stats.get(availableRole).incrementLeft();
         }
         if (oldValue != null) stats.get(oldValue).decrementAssigned();
     }
 
     private void updateStatsAssignedPlayer(Player player, boolean wasUnassigned) {
-        stats.get(player.getAssignedRole()).incrementAssigned();
+        stats.get(player.getAssignedRoleObj().getRoleHandle()).incrementAssigned();
         if (wasUnassigned) {
-            for (String availableRole : player.getSimpleRoleList()) {
+            for (String availableRole : player.getRolehandleList()) {
                 stats.get(availableRole).decrementLeft();
             }
         }
@@ -240,7 +248,6 @@ public class Result extends BorderPane implements AppContent{
         Button reRunSolver = new Button("Find a Different Setup");
         Button saveToCSVBtn = new Button("Save Squad Composition to CSV");
         Button sortSquads = new Button("Sort squads the Kez way");
-        Button removeSolution = new Button("Delete this Solution");
 
         reRunSolver.setOnAction(e -> findNewSetup());
         clearComp.setOnAction(e -> clearSquadComp());
@@ -256,10 +263,6 @@ public class Result extends BorderPane implements AppContent{
         });
         saveToCSVBtn.setOnAction(e -> saveToCSV());
         sortSquads.setOnAction(e -> sortPlayerOrder());
-        removeSolution.setOnAction(e -> {
-            cleanup();
-            parent.navigateSolving();
-        });
 
         HBox squadsControl = new HBox(10);
         squadsControl.setAlignment(Pos.CENTER);
@@ -281,7 +284,7 @@ public class Result extends BorderPane implements AppContent{
 
         ComboBox<String> roleFilterDropdown = new ComboBox<>();
         roleFilterDropdown.getItems().add("All");
-        roleFilterDropdown.getItems().addAll(Player.ROLES);
+        roleFilterDropdown.getItems().addAll(Roles.getAllRolesAsStrings());
         roleFilterDropdown.getSelectionModel().selectFirst();
         roleFilterDropdown.setOnAction(e -> {
             squadViews.getChildren().forEach(node -> ((Pane) node).getChildren()
@@ -293,7 +296,7 @@ public class Result extends BorderPane implements AppContent{
         });
 
         VBox panel = new VBox(10);
-        panel.getChildren().addAll(clearComp, autoFill, reRunSolver, saveToCSVBtn, sortSquads, removeSolution,
+        panel.getChildren().addAll(clearComp, autoFill, reRunSolver, saveToCSVBtn, sortSquads,
                 new Region(), new Label("Squads: "), squadsControl,
                 new Region(), new Label("Filter by role: "), roleFilterDropdown);
         panel.setAlignment(Pos.TOP_CENTER);
@@ -345,13 +348,14 @@ public class Result extends BorderPane implements AppContent{
      */
     private void autoFillTrainees() {
         SquadComposition initialState = new SquadComposition(Stream.of(commandersAndAides, trainees)
-                .flatMap(Collection::stream).collect(Collectors.toList()), squads);
-        solver = new BestFirstSearchTask(initialState);
+                .flatMap(Collection::stream).collect(Collectors.toList()), squads, parent.getSolution().getSquadTypes());
+        solver = new AutoAssignTraineeTask(initialState);
         solver.setOnSucceeded(t -> {
             if (solver.getValue() == null) setSquads(null);
             else setSquads(((SquadComposition) solver.getValue()).getSquads());
             autoFill.setText(AUTO_FILL_TEXT);
             solver = null;
+            sortPlayerOrder();
         });
         Thread thread = new Thread(solver);
         thread.start();
@@ -416,6 +420,11 @@ public class Result extends BorderPane implements AppContent{
         ArrayList<Player> players = new ArrayList<>(parent.getTraineeList());
         for (List<Player> chosenOnes : squads) {
             players.removeAll(chosenOnes);
+			
+			//remove all players with the same gw2 id
+			for (Player player : chosenOnes) {
+				players.removeAll(players.stream().filter(p -> (player.getGw2Account().equals(p.getGw2Account()))).collect(Collectors.toCollection(ArrayList::new)));
+			}
         }
         return players;
     }

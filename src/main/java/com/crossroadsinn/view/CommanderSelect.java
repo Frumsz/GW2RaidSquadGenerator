@@ -10,6 +10,7 @@ import jfxtras.styles.jmetro.JMetroStyleClass;
 import com.crossroadsinn.signups.Player;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 /**
@@ -72,12 +73,12 @@ public class CommanderSelect extends BorderPane implements AppContent{
     private void confirmChoices() {
         try {
             App parent = (App) getParent();
-            if (commanderTable.getItems().stream().anyMatch(p -> p.getChosenRoles().get() != 0)) {
+            if (commanderTable.getItems().stream().anyMatch(p -> p.getChosenRoles().size() > 0)) {
                 ArrayList<Player> selectedCommanders = commanderTable.getItems()
-                        .stream().filter(p -> p.getChosenRoles().get() != 0)
+                        .stream().filter(p -> p.getChosenRoles().size() > 0)
                         .map(c -> {
                             Player p = new Player(c);
-                            p.setRoles(c.getChosenRoles().get());
+                            p.setRoles(new HashSet<>(c.getChosenRoles()));
                             return p;
                         }).collect(Collectors.toCollection(ArrayList::new));
                 parent.setSelectedCommanderList(selectedCommanders);

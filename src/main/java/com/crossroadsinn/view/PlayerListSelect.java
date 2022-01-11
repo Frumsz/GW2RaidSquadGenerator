@@ -211,6 +211,10 @@ public class PlayerListSelect extends VBox implements AppContent {
                 FileChooser csvChooser = new FileChooser();
                 csvChooser.getExtensionFilters().add(csvFilter);
                 File input = csvChooser.showOpenDialog(this.getScene().getWindow());
+                // don't want to select files all the time, this is easy
+//                File input = new File("C:\\Users\\Frums\\Documents\\GitHub\\GW2RaidSquadGenerator\\signups (6).csv");
+//                File inputComm = new File("C:\\Users\\Frums\\Documents\\GitHub\\GW2RaidSquadGenerator\\Signups for squadmaker - Coms (2).csv");
+//                input = forCommanders ? inputComm : input;
                 // If input = null, operation was canceled.
                 if (input != null) parsePlayerFile(new InputStreamReader(new FileInputStream(input), StandardCharsets.UTF_8), forCommanders);
                 else {
@@ -248,7 +252,7 @@ public class PlayerListSelect extends VBox implements AppContent {
     private void uploadTrainees(ArrayList<Player> trainees) {
         // Keep only trainees with an assigned tier between 0 and 3 included.
         if (trainees != null) trainees = trainees.stream()
-                .filter(p -> p.getTier().matches("[0123]"))
+                .filter(p -> p.getTier().matches("^([0123]|(trainee))$"))
                 .collect(Collectors.toCollection(ArrayList::new));
         setTraineeList(trainees);
         update();

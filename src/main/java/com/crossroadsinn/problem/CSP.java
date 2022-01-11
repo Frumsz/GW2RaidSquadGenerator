@@ -1,12 +1,10 @@
 package com.crossroadsinn.problem;
 
-import java.util.ArrayList;
-
 public interface CSP {
 
-    public ArrayList<CSP> getChildren();
+    CSP getChildren() throws Exception;
 
-    public int heuristic();
+    int heuristic();
 
-    public boolean isSolution();
+    boolean isSolution();
 }

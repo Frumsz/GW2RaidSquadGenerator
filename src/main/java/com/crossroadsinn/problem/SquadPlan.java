@@ -1,9 +1,12 @@
 package com.crossroadsinn.problem;
 
+import com.crossroadsinn.settings.Role;
+import com.crossroadsinn.settings.Squads;
+import com.crossroadsinn.signups.Player;
+
 import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * Defines the CSP structure for Squad Generation.
@@ -12,36 +15,91 @@ import java.util.stream.Stream;
  * @version 1.0
  */
 public class SquadPlan implements CSP {
-    // private static final int[] roles = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
-    private static final int[] basicRoles = {2, 1, 4, 64, 1024};
-    private static final int[] supportRoles = {8, 16, 32, 128, 256, 512, 2048};
+    private int numSquads;
+    private final List<Player> trainers;
+    private final List<Player> players;
+    private Map<Player, Role> assigned = new HashMap<>();
+	
+	//what squad types are allowed to use up to which amounts, 0 being endless
+	private final LinkedHashMap<String, Integer> squadTypeAllowed;
+	private final SearchResultsState searchResultsState;
+	
+	//save what squads have been used to generate to parse it on for SquadComposition.java
+	private ArrayList<String> squadTypes = new ArrayList<>();
 
-    private final int numSquads;
-    private final int trainerStartIndex;
-    private final ArrayList<Integer[]> trainers;
-    private ArrayList<Integer[]> players;
-    private ArrayList<Integer[]> assigned = new ArrayList<>();
-    //                    dps, bs, cTank, druid, suppGroup
-    private int[] left = { 5,   1,   1,     1,      1};
-    //                         dps, bs, cTank, druid, offheal, cSupp, qFB, hFB, alacrigade, heal renegade, quickchrono
-    private int[] available = { 0,   0,   0,     0,      0,      0,    0,   0,      0,          0,             0};
+	BiPredicate<Role, String> specialRoleTester = (playerRole, roleType) -> playerRole.getSpecialRoles().contains(roleType);
+	BiPredicate<Role, String> boonRoleTester = (playerRole, roleType) -> playerRole.getBoons().containsKey(roleType);
 
-    public SquadPlan(ArrayList<Integer[]> trainees, ArrayList<Integer[]> trainers) {
-        this(trainees, trainers, 0);
-    }
+	// Linked hashmap as we want a certain order to the roles (for filling purposes you want multi-covering roles first)
+    private LinkedHashMap<String, Integer> reqBoons = new LinkedHashMap<String, Integer>();
+    private LinkedHashMap<String, Integer> reqSpecialRoles = new LinkedHashMap<String, Integer>();
+	private int reqPlayers = 10;
 
-    public SquadPlan(ArrayList<Integer[]> trainees, ArrayList<Integer[]> trainers, int numSquads) {
-        trainerStartIndex = trainers.stream().mapToInt(e -> { return e[0];} ).min().getAsInt();
-        this.trainers = trainers.stream().map(Integer[]::clone).collect(Collectors.toCollection(ArrayList::new));
-        Collections.shuffle(this.trainers);
-        this.players = Stream.of(trainees, trainers).flatMap(Collection::stream).collect(Collectors.toCollection(ArrayList::new));
-        parsePlayers(players.stream().mapToInt(p -> p[1]).toArray());
+    public SquadPlan(List<Player> trainees, List<Player> trainers, int numSquads, LinkedHashMap<String, Integer> squadTypeAllowed) {
+        this.trainers = new ArrayList<>(trainers);
+        this.players = new ArrayList<>(trainees);
+		// Shuffle once so we don't have to constantly random pick but we can work through all solutions in orderly fashion
+		Collections.shuffle(this.trainers);
+		Collections.shuffle(this.players);
+		// By adding trainers after the players, the will be always the last pick option for special roles and boons
+		this.players.addAll(this.trainers);
+		this.numSquads = numSquads;
+		this.squadTypeAllowed = new LinkedHashMap<>(squadTypeAllowed);
+		this.searchResultsState = new SearchResultsState();
+		calculateRequirements();
+	}
+		
+	private void calculateRequirements() {
+		//temp part, will be replaced with proper passing of settings from UI later
+		//get all allowed SquadTypes and check if there's a max amount of squads from there. if yes, check if bigger than numSquads and apply
+		int maxSquadsSelected = 0;
+		for (int i:squadTypeAllowed.values()) {
+			if (i == 0) {
+				maxSquadsSelected = 0;
+				break;
+			}
+			maxSquadsSelected += i;
+		}
+		if (maxSquadsSelected > 0 && maxSquadsSelected < numSquads) numSquads = maxSquadsSelected;
+		
+		//max number of squads possible guessing
+		//max number was set in UI, check if enough players even exist and enough squads are allowed, if not, assume we have no max squads setting and set numSquads based on available players
+		if (numSquads != 0) {
+			if (numSquads*10>players.size()) {
+				numSquads = 0;
+			}
+		};
+		if (numSquads == 0) {
+			numSquads = (players.size()/10);
+			if (maxSquadsSelected > 0 && maxSquadsSelected < numSquads) numSquads = maxSquadsSelected;
+		}
+		
+		//set amount of required players
+		reqPlayers = numSquads*10;
 
-        this.numSquads = numSquads == 0 ?
-                Arrays.stream(new int[]{players.size() / 10, available[0] / 5, available[1], available[2], available[3]}).min().getAsInt() :
-                numSquads;
-        for(int i = 0; i < left.length; ++i) { left[i] = left[i] * this.numSquads; }
-    }
+		//build requirements from a random composition of available squadtypes, max 1k tries, then go lower numSquads amount
+		boolean foundSquads = false;
+		while(numSquads>squadTypes.size()) {
+			int i = 0;
+			while (i<1000) {
+				if (buildSquadRequirements()) {
+					foundSquads = true;
+					break;
+				} else {
+					//reset variables and try again
+					this.squadTypes = new ArrayList<>();
+					this.reqBoons = new LinkedHashMap<>();
+					this.reqSpecialRoles = new LinkedHashMap<>();
+				}
+				i++;
+			}
+			if (!foundSquads) {
+				numSquads-= 1;
+				//set amount of required players
+				reqPlayers = this.numSquads*10;
+			}			
+		}
+	}
 
     /**
      * Copy constructor. Creates a deepcopy.
@@ -49,355 +107,247 @@ public class SquadPlan implements CSP {
      */
     public SquadPlan(SquadPlan other) {
         this.numSquads = other.numSquads;
-        this.trainers = other.trainers.stream().map(Integer[]::clone).collect(Collectors.toCollection(ArrayList::new));
-        this.players = other.players.stream().map(Integer[]::clone).collect(Collectors.toCollection(ArrayList::new));
-        this.assigned = other.assigned.stream().map(Integer[]::clone).collect(Collectors.toCollection(ArrayList::new));
-        this.left = Arrays.copyOf(other.left, other.left.length);
-        this.available = Arrays.copyOf(other.available, other.available.length);
-        this.trainerStartIndex = other.trainerStartIndex;
+        this.trainers = new ArrayList<>(other.trainers);
+        this.players = new ArrayList<>(other.players);
+        this.assigned = new HashMap<>(other.assigned);
+		this.squadTypeAllowed = new LinkedHashMap<>(other.squadTypeAllowed);
+        this.squadTypes = other.squadTypes; //add proper deepcopy here
+		this.reqPlayers = other.reqPlayers;
+		this.reqBoons = new LinkedHashMap<>(other.reqBoons);
+		this.reqSpecialRoles = new LinkedHashMap<>(other.reqSpecialRoles);
+		this.searchResultsState = other.searchResultsState;
     }
 
     public int getNumSquads() {
         return numSquads;
     }
 
-    public ArrayList<Integer[]> getAssigned() {
+    public Map<Player, Role> getAssigned() {
         return assigned;
     }
 
-    /**
-     * Update availabilities for each player.
-     * @param players list of players.
-     */
-    private void parsePlayers(int[] players) {
-        for ( int player : players ) {
-            // dps
-            if ( (player & 3) > 0) available[0] += 1;
-            // bs
-            if ( (player & 4) > 0) available[1] += 1;
-            // cTank
-            if ( (player & 1024) > 0) available[2] += 1;
-            // druid
-            if ( (player & 64) > 0) available[3] += 1;
-            // offheal
-            if ( (player & 8) > 0) available[4] += 1;
-            // cSupp
-            if ( (player & 512) > 0) available[5] += 1;
-            // qFB
-            if ( (player & 256) > 0) available[6] += 1;
-            // hFB
-            if ( (player & 32) > 0) available[7] += 1;
-            // alacrigade
-            if ( (player & 128) > 0) available[8] += 1;
-            // heal renegade
-            if ( (player & 16) > 0) available[9] += 1;
-            // quickness chrono
-            if ( (player & 2048) > 0) available[10] += 1;
-        }
+    public ArrayList<String> getSquadTypes() {
+        return squadTypes;
     }
+	
+	//function to build squad requirements based on allowed squads
+	private boolean buildSquadRequirements() {
+		//get a random squad
+		List<String> valuesList = new ArrayList<String>(squadTypeAllowed.keySet());
+		int randomIndex = new Random().nextInt(valuesList.size());
+		String randomValue = valuesList.get(randomIndex);
 
-    /**
-     * Checks that sufficient roles are available to satisfy current needs.
-     * @return whether this squad plan is currently valid or not.
-     */
-    public boolean checkArcDependencies() {
-        // Enough dps still available
-        if (left[0] > available[0]) return false;
-        // Enough bs still available
-        if (left[1] > available[1]) return false;
-        // Enough cTank still available
-        if (left[2] > available[2]) return false;
-        // Enough druid still available
-        if (left[3] > available[3]) return false;
-        // Enough support groups left
-        int quickhealAlacPairs = Math.min(available[6]+available[10], available[9]); // qFB or qChrono
-        int hFBalacrigadePairs = Math.min(available[7], available[8]);
-        int offhealLeft = available[4] + Math.abs(available[9] - available[6]) + Math.abs(available[8] - available[7]) + Math.abs(available[3] - left[3]);
-        int cSuppOffhealPairs = Math.min(offhealLeft, available[5]);
-        if (left[4] > (quickhealAlacPairs + hFBalacrigadePairs + cSuppOffhealPairs)) return false;
-        // Enough players are left to complete squads
-        players = players.stream().filter(p -> p[1] != 0).collect(Collectors.toCollection(ArrayList::new));
-        return (IntStream.of(left).sum() + left[4] <= players.size());
-    }
+		//add requirements - boons
+		for (String key:Squads.getSquad(randomValue).getReqBoons().keySet()) {
+			int value = Squads.getSquad(randomValue).getReqBoons().get(key);
+			if (reqBoons.containsKey(key)) {
+				value += reqBoons.get(key);
+			}
+			reqBoons.put(key,value);
+		}
+
+		//add requirements - roles
+		for (String key:Squads.getSquad(randomValue).getReqSpecialRoles().keySet()) {
+			int value = Squads.getSquad(randomValue).getReqSpecialRoles().get(key);
+			if (reqSpecialRoles.containsKey(key)) {
+				value += reqSpecialRoles.get(key);
+			}
+			reqSpecialRoles.put(key,value);
+		}
+
+		//add to squad amounts
+		squadTypes.add(randomValue);
+
+		//check dependencies, return false if can't satisfy the squad combination requirements
+		// TODO FRUMS are we sure we still need this?
+		return true;
+	}
 
     /**
      * Set a role for a player. Return true if arc dependencies remain satisfied.
      * This method is to be used with basic roles only.
      * @return whether or not arc dependencies are satisfied.
      */
-    private boolean setPlayer(int playerIndex, int role) {
-        // Check that role is a basic role.
-        int basicRoleMask = Arrays.stream(basicRoles).sum();
-        if ((role & basicRoleMask) == 0) return false;
-        // Check if role needed:
-        if ((role & 3) > 0 && left[0] == 0) return false;
-        else if ((role & 4) > 0 && left[1] == 0) return false;
-        else if ((role & 1024) > 0 && left[2] == 0) return false;
-        else if ((role & 64) > 0 && left[3] == 0) return false;
+    private boolean setPlayer(Player player, Role playerRole) {
+		//check if even still need a player
+		if (reqPlayers < 1) return false;
 
-        // Find player
-        Integer[] player = null;
-        for (int i = 0; i < players.size(); ++i) {
-            if (players.get(i)[0] == playerIndex) {
-                player = players.remove(i);
-                break;
-            }
-        }
-        if (player == null) return false;
-        // Role not found in player.
-        if ((player[1] & role) == 0) return false;
+		//special role still needed
+		for (String key : playerRole.getSpecialRoles()) {
+			//workaround for dps in special roles
+			if (key.equals("dps")) continue;
+			if (!reqSpecialRoles.containsKey(key)) return false;
+			if (playerRole.getIfRole(key) > reqSpecialRoles.get(key)) return false;
+		}
+		// enough boons still available
+		for (String key : playerRole.getBoons().keySet()) {
+			if (playerRole.getBoonAmount(key) > reqBoons.get(key)) return false;
+		}
 
-        // Assign player and remove it from available
-        removeAvailabilities(player[1]);
-        player[1] = role;
-        assigned.add(player);
-
-        if ((role & 3) > 0) left[0] -= 1;
-        else if ((role & 4) > 0) left[1] -= 1;
-        else if ((role & 1024) > 0) left[2] -= 1;
-        else if ((role & 64) > 0) left[3] -= 1;
-
+        assigned.put(player, playerRole);
+		players.remove(player);
+		
+		// remove player from requirements
+		reqPlayers -= 1;
+		for(String specialRole : playerRole.getSpecialRoles()) {
+			if (reqSpecialRoles.containsKey(specialRole)) {
+				reqSpecialRoles.put(specialRole, reqSpecialRoles.get(specialRole) - 1);
+			}
+		}
+		for(String boon: playerRole.getBoons().keySet()) {
+			if (reqBoons.containsKey(boon)) {
+				reqBoons.put(boon, reqBoons.get(boon) - playerRole.getBoonAmount(boon));
+			}
+		}
         // Return validity of state
-        return checkArcDependencies();
+        return true;
     }
 
-    /**
-     * Set a role for a player. Return true if arc dependencies remain satisfied.
-     * This method is to be used with support roles only.
-     * @param playerIndex1 id of first player.
-     * @param role1 role assigned to first player.
-     * @param playerIndex2 id of second player.
-     * @param role2 role assigned to second player.
-     * @return whether or not arc dependencies are satisfied.
-     */
-    private boolean setPlayerPair(int playerIndex1, int role1, int playerIndex2, int role2) {
-        // Check support group is needed:
-        if (left[4] <= 0) return false;
-        // Check support roles provided (chrono supp, qFB, alacrigade, druid, heal FB, heal Renegade, other heal):
-        int supportMask = Arrays.stream(supportRoles).sum();
-        if (Math.min(role1 & supportMask, role2 & supportMask) == 0) return false;
-        // Find players:
-        Integer[] player1 = null;
-        Integer[] player2 = null;
-        Iterator<Integer[]> itr = players.iterator();
-        while (itr.hasNext()) {
-            Integer[] p = itr.next();
-            if (playerIndex1 == p[0]) {
-                player1 = p;
-                itr.remove();
-            } else if (playerIndex2 == p[0]) {
-                player2 = p;
-                itr.remove();
-            }
-            if (player1 != null && player2 != null) break;
-        }
-        // At least one player not found.
-        if (player1 == null || player2 == null) return false;
-        // Role not found in at least one player.
-        if (Math.min(player1[1] & role1, player2[1] & role2) == 0) return false;
+	/**
+	 *
+	 * @param roleType Name of the type a role has to fulfill (e.g. "tank" or "quickness"
+//	 * @param useTrainers Use trainers instead of trainees in the search
+	 * @param roleToTypeMapper To get the role type, this allows the method to be used for both boons and special roles
+	 * @return
+	 */
+	private Optional<CSP> getNextCSPForRoleType(String roleType, BiPredicate<Role, String> roleToTypeMapper) throws Exception {
+		// Get a filtered list of player indexes that can play druid, an
+		List<Player> boonPlayers = players.stream()
+				.filter(es -> es.getRoles().stream().anyMatch(s -> roleToTypeMapper.test(s, roleType)))
+				.collect(Collectors.toList());
 
-        // Assign players and remove them from available
-        removeAvailabilities(player1[1]);
-        removeAvailabilities(player2[1]);
-        player1[1] = role1;
-        player2[1] = role2;
-        assigned.add(player1);
-        assigned.add(player2);
+		for (Player player : boonPlayers) {
+			SquadPlan copy = new SquadPlan(this);
+			// .get() is fine as we already filtered the players
+			if (copy.setPlayer(player, player.getRoles().stream().filter(rl -> roleToTypeMapper.test(rl, roleType)).findFirst().get())) {
+				CSP possibleResult = copy.getChildren();
+				if (possibleResult != null) {
+					return Optional.of(possibleResult);
+				}
+			}
+		}
+		return Optional.empty();
+	}
 
-        // Add the support group.
-        left[4] -= 1;
+	private Optional<CSP> addPlayersForRoleType(LinkedHashMap<String, Integer> requiredRolesMap, BiPredicate<Role, String> roleTypeFetch) throws Exception {
+		for (String requiredRoleType : requiredRolesMap.keySet()) {
+			if (requiredRolesMap.get(requiredRoleType) > 0) {
+				Optional<CSP> possibleResult = getNextCSPForRoleType(requiredRoleType, roleTypeFetch);
+				if (possibleResult.isPresent()) {
+					return possibleResult;
+				}
+			}
+		}
+		return Optional.empty();
+	}
 
-        // Return validity of state
-        return checkArcDependencies();
-    }
+	private Optional<CSP> addDpsPlayer(List<Player> eligiblePlayers) throws Exception {
+		for (Player player : eligiblePlayers) {
+			for (Role role : player.getRoles().stream().filter(r -> r.getDPS() > 0).collect(Collectors.toList())) {
+				SquadPlan copy = new SquadPlan(this);
+				if (copy.setPlayer(player, role)) {
+					CSP possibleResult = copy.getChildren();
+					if (possibleResult != null) {
+						return Optional.of(possibleResult);
+					}
+				}
+			}
+		}
+		return Optional.empty();
+	}
 
     /**
      * Pick a random player and for each of it's availabilities whether a valid plan can be generated.
      * If not, remove player from list (soz broski, maybe next week will be your week)
      * @return valid SquadPlans generated.
      */
-    public ArrayList<CSP> getChildren() {
-        ArrayList<CSP> children = new ArrayList<>();
-        boolean shouldForwardChain = true;
+    public CSP getChildren() throws Exception {
+		if (searchResultsState.getFailures() > 10000) {
+			return null;
+		}
+		// TODO frums add a check if we take too long (10 seconds), just quit
 
-        while (children.isEmpty() && players.size() > 0) {
-            Integer[] player;
-            if (!trainers.isEmpty()) {
-                // Start with commanders:
-                player = trainers.remove(0);
-                shouldForwardChain = false;
-            } else {
-                // Pick random player:
-                int randomIndex = new Random().nextInt(players.size());
-                player = players.get(randomIndex);
-            }
+		// Don't go on if we already are a solution!
+		if (isSolution()) {
+			return this;
+		}
+		// First add the special roles, if not required we will continue
+		Optional<CSP> optAddedPlayer =  addPlayersForRoleType(reqSpecialRoles, specialRoleTester);
+		if (optAddedPlayer.isPresent()) {
+			return optAddedPlayer.get();
+		}
+		// we should have filled up all special roles , if not, we failed as we have no-one to fill the missing role(s), maybe a different setup will work
+		if (reqSpecialRoles.values().stream().anyMatch(a -> a > 0)) {
+			searchResultsState.incrementFailures();
+			return null;
+		}
 
-            // Check all availabilities of chosen player:
-            for (int role : SquadPlan.basicRoles ) {
-                if ((player[1] & role) > 0 ) {
-                    SquadPlan copy = new SquadPlan(this);
-                    if (copy.setPlayer(player[0], role)) {
-                        if (shouldForwardChain && copy.forwardChain()) children.add(copy);
-                        else if (!shouldForwardChain) children.add(copy);
-                    }
-                }
-            }
-            for (int role : SquadPlan.supportRoles) {
-                if ((player[1] & role) > 0 ) {
-                    ArrayList<Integer[]> candidates = findSupportPair(player[0], role);
-                    final boolean finalShouldForwardChain = shouldForwardChain;
-                    candidates.forEach(candidate -> {
-                        SquadPlan copy = new SquadPlan(this);
-                        if (copy.setPlayerPair(player[0], role, candidate[0], candidate[1])) {
-                            if (finalShouldForwardChain && copy.forwardChain()) children.add(copy);
-                            else if (!finalShouldForwardChain) children.add(copy);
-                        }
-                    });
-                }
-            }
+		// Next up, fill up the boons, special roles are filled up
+		optAddedPlayer =  addPlayersForRoleType(reqBoons, boonRoleTester);
+		if (optAddedPlayer.isPresent()) {
+			return optAddedPlayer.get();
+		}
 
-            // Player has no valid availabilities:
-            if (children.isEmpty()) players.remove(player);
-        }
-        Collections.shuffle(children); return children;
-    }
+		// we should have filled up all boons, if not, we failed as we have no-one to fill the missing role(s), maybe a different setup will work
+		if (reqBoons.values().stream().anyMatch(a -> a > 0)) {
+			searchResultsState.incrementFailures();
+			return null;
+		}
+		// Sometimes we end up with not enough DPS players because many special roles signed up
+		if (!checkIfStillEnoughDPS()) {
+			searchResultsState.incrementFailures();
+			return null;
+		}
+		// Should only require DPS now
+		// First use up all leftover commanders to fill it up and then the whatever is left, this makes sure we have assigned every commander/trainee
+		optAddedPlayer = addDpsPlayer(players.stream().filter(Player::isTrainer).collect(Collectors.toList()));
+		if (optAddedPlayer.isPresent()) {
+			return optAddedPlayer.get();
+		}
+		// And fill up with leftover dps trainees
+		optAddedPlayer = addDpsPlayer(players);
+		if(optAddedPlayer.isPresent()){
+			return optAddedPlayer.get();
+		}
+		// Can't find the last DPS player, but we already checked for that so must be programmer error
+		throw new Exception("Classic this should not happen exception");
+	}
 
-    /**
-     * Equal operators for when using memorization in search algorithms.
-     * @param other The problem.SquadPlan to compare with.
-     * @return where their states are equal or not.
-     */
-    public boolean equals(SquadPlan other) {
-        return numSquads == other.numSquads && assigned.equals(other.assigned) && players.equals(other.players);
-    }
+	/**
+	 * Note, this should only be used if you already have the special roles/boons filled
+	 */
+	public boolean checkIfStillEnoughDPS() {
+		return players.stream().filter(p -> p.getRoles().stream().anyMatch(r -> r.getDPS() > 0)).count() > reqPlayers;
+	}
 
     /**
      * Calculates the heuristic for the problem.SquadPlan based on remaining spots to fill.
      * @return the heuristic value for this plan.
      */
     public int heuristic() {
-        // Double chrono is bad! Avoid it at all costs.
-        int numChronoSupp = (int) assigned.stream().filter(p -> p[1] == 512).count();
-        // Commander not on DPS is bad. NOTE: This part was written while under the sea. *Insert song from The Little Mermaid*
-        int numCommNotAsDPS = (int) assigned.stream().filter(e -> e[0] >= trainerStartIndex).filter(e -> e[1] > 3).count();
-        return IntStream.of(left).sum() + numChronoSupp + numCommNotAsDPS;
+		// Having 4 instead of 5 dps isn't the worst in a squad
+		int notDpsPlayers = (int) assigned.values().stream().filter(r -> r.getDPS() == 0).count();
+
+		// Avoid if possible
+		int commNotAsDps = (int) assigned.entrySet().stream().filter(e -> e.getKey().isTrainer()).filter(r -> r.getValue().getDPS() == 0).count() * 50;
+
+		return notDpsPlayers + commNotAsDps;
     }
 
     /**
      * @return whether or not this plan is a solution.
      */
     public boolean isSolution() {
-        return IntStream.of(left).sum() == 0;
-    }
-
-    /**
-     * Remove the provided availabilities from the problem.SquadPlan
-     * @param playerAvailabilities the availabilities to remove.
-     */
-    private void removeAvailabilities(int playerAvailabilities) {
-        // dps
-        if ( (playerAvailabilities & 3) > 0) available[0] -= 1;
-        // bs
-        if ( (playerAvailabilities & 4) > 0) available[1] -= 1;
-        // cTank
-        if ( (playerAvailabilities & 1024) > 0) available[2] -= 1;
-        // druid
-        if ( (playerAvailabilities & 64) > 0) available[3] -= 1;
-        // offheal
-        if ( (playerAvailabilities & 8) > 0) available[4] -= 1;
-        // cSupp
-        if ( (playerAvailabilities & 512) > 0) available[5] -= 1;
-        // qFB
-        if ( (playerAvailabilities & 256) > 0) available[6] -= 1;
-        // hFB
-        if ( (playerAvailabilities & 32) > 0) available[7] -= 1;
-        // alacrigade
-        if ( (playerAvailabilities & 128) > 0) available[8] -= 1;
-        // heal renegade
-        if ( (playerAvailabilities & 16) > 0) available[9] -= 1;
-        // quickness chrono
-        if ( (playerAvailabilities & 2048) > 0) available[10] -= 1;
-    }
-
-    /**
-     * Apply obvious changes that do not have any alternative.
-     * @return whether the resulting plan is valid or not.
-     */
-    private boolean forwardChain() {
-        int changed = 1;
-        while (changed > 0) {
-            int changedDps = checkRole(0, 3);
-            if (changedDps == -1) return false;
-            int changedBs = checkRole(1, 4);
-            if (changedBs == -1) return false;
-            int changedTank = checkRole(2, 1024);
-            if (changedTank == -1) return false;
-            int changedDruid = checkRole(3, 64);
-            if (changedDruid == -1) return false;
-            // Check Arc Dependencies.
-            if (!checkArcDependencies()) return false;
-            changed = changedDps + changedBs + changedTank + changedDruid;
-        }
-        return true;
-    }
-
-    /**
-     * The following methods check if the number of a role available matches the number still required for that role.
-     * If that is the case, all players with that role are assigned it.
-     * @param roleIndex The index of the role in left static array.
-     * @param roleValue The bit of the role. I.e. Druid = 64 = 00001000000
-     * @return -1 if failure, 0 if no change, 1 if change occurred.
-     */
-    private int checkRole(int roleIndex, int roleValue) {
-        if (left[roleIndex] != 0 && available[roleIndex] == left[roleIndex]){
-            ArrayList<Integer[]> playerList = players.stream().filter(p -> ((p[1] & roleValue) > 0)).collect(Collectors.toCollection(ArrayList::new));
-            for (Integer[] player : playerList) {
-                if (!setPlayer(player[0], roleValue)) return -1;
-            }
-            return 1;
-        }
-        return 0;
-    }
-
-    /**
-     * This method creates support group pairs. Given an initial support player, it looks for any valid partner.
-     * Valid pairs are: qFB, Heal Rene | hFB, alacrigade | chronosupp, any heal
-     * @param player1 The index of the player.
-     * @param role1 The role of one player in the pair.
-     * @return a list of possible partners.
-     */
-    private ArrayList<Integer[]> findSupportPair(int player1, int role1) {
-        ArrayList<Integer[]> candidates = new ArrayList<>();
-        // Recursive start a new search on all possible pair options.
-        int role2;
-        // qFB and Heal Alac
-        if (role1 == 256) role2 = 16;
-        else if (role1 == 2048) role2 = 16;
-        else if (role1 == 16) role2 = 256+2048;
-        // hFB and alacrigade
-        else if (role1 == 128) role2 = 32;
-        else if (role1 == 32) role2 = 128;
-        // chronosupp and offheal
-        else if (role1 == 8) role2 = 512;
-        // Any heal with cSupp.
-        else if (role1 == 512) role2 = 8+16+32;
-        else return candidates;
-
-        // Case not cSupp or hwal alac: only one candidate role.
-        if ((role1 & (512+16)) == 0) {
-            players.forEach(p -> {
-                if ((p[1] & role2) > 0 && p[0] != player1) candidates.add(new Integer[]{p[0], role2});
-            });
-        }
-        // Case cSupp or heal alac: multiple candidate roles.
-        else {
-            for (int role : Arrays.stream(supportRoles).filter(r -> (r & role2) > 0).toArray()) {
-                players.forEach(p -> {
-                    if ((p[1] & role) > 0 && p[0] != player1) candidates.add(new Integer[]{p[0], role});
-                });
-            }
-        }
-        Collections.shuffle(candidates);
-        return candidates;
+		//must not need any more players
+		if (reqPlayers != 0) return false;
+		//must not need any more special roles
+		for (int amount:reqSpecialRoles.values()) {
+			if (amount != 0) return false;
+		}
+		//must not need any more boons
+		for (int amount:reqBoons.values()) {
+			if (amount != 0) return false;
+		}
+		return true;
     }
 }

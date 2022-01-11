@@ -1,13 +1,16 @@
 package com.crossroadsinn.view;
 
+import com.crossroadsinn.components.SquadsTable;
+import com.crossroadsinn.settings.Squads;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.concurrent.Task;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import jfxtras.styles.jmetro.JMetroStyleClass;
 import com.crossroadsinn.problem.SquadPlan;
-import com.crossroadsinn.search.GreedyBestFirstSearch;
 import com.crossroadsinn.search.SolveSquadPlanTask;
 
 /**
@@ -22,19 +25,32 @@ public class Solving extends VBox implements AppContent {
     Label msg;
     Button mainBtn, manualBtn;
     Task<SquadPlan> solver;
+	SquadsTable squadsTable;
+    ProgressBar progressBar;
 
     public Solving(App parent) {
         super(10);
         this.parent = parent;
         getStyleClass().add(JMetroStyleClass.BACKGROUND);
         setAlignment(Pos.CENTER);
+		
+		squadsTable = new SquadsTable(FXCollections.observableArrayList());
+		squadsTable.getStyleClass().add("alternating-row-colors");
+		
+		StackPane content = new StackPane();
+        content.getChildren().addAll(squadsTable);
+        content.setPadding(new Insets(10));
+
+        progressBar = new ProgressBar(0);
+        progressBar.setMinHeight(10);
+        progressBar.setMaxWidth(500);
         mainBtn = new Button();
         mainBtn.setOnAction(e -> {
             toggleSolving();
         });
         manualBtn = new Button("Make Squads Manually");
         msg = new Label();
-        getChildren().addAll(mainBtn, msg, manualBtn);
+        getChildren().addAll(content, mainBtn, progressBar, msg, manualBtn);
         manualBtn.setOnAction(e -> makeSquadsManually());
     }
 
@@ -42,6 +58,8 @@ public class Solving extends VBox implements AppContent {
      * Initialise the view with data from the parent.
      */
     public void init() {
+        squadsTable.getItems().clear();
+        squadsTable.getItems().addAll(Squads.getSquads());
         if (solver != null) {
             solver.cancel();
             solver = null;
@@ -73,9 +91,13 @@ public class Solving extends VBox implements AppContent {
      * and start the thread.
      */
     private void startSolving() {
+        progressBar.setProgress(0);
+        ListChangeListener<SquadPlan> resultListener = c -> progressBar.setProgress(((double)c.getList().size() / 100.0));
+
         solver = new SolveSquadPlanTask(parent.getSelectedCommanderList(),
-                parent.getSelectedTraineeList(), new GreedyBestFirstSearch(), parent.getMaxSquads());
+                parent.getSelectedTraineeList(), parent.getMaxSquads(), resultListener);
         solver.setOnSucceeded(t -> displaySquads(solver.getValue()));
+
         Thread thread = new Thread(solver);
         thread.start();
     }

@@ -43,9 +43,9 @@ public class PlayerListView extends ListView<Player> {
     }
 
     private static int getRoleOrder(Player player) {
-        if (player.getAssignedRole() == null) return ROLE_ORDER.length;
+        if (player.getAssignedRoleObj() == null) return ROLE_ORDER.length;
         for (int i = 0; i < ROLE_ORDER.length; ++i) {
-            if (player.getAssignedRole().equals(ROLE_ORDER[i])) return i;
+            if (player.getAssignedRoleObj().getRoleName().equals(ROLE_ORDER[i])) return i;
         }
         return ROLE_ORDER.length;
     }
