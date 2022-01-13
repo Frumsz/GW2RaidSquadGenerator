@@ -189,18 +189,6 @@ public class Result extends BorderPane implements AppContent{
     }
 
     /**
-     * Save the squad comp formed by the user into CSV.
-     */
-    private void saveToCSV() {
-        if (!squads.isEmpty()) {
-            boolean saveSuccessful = SquadSaver.saveToCSV(squads,
-                    Stream.of(getLeftovers(), trainees).flatMap(Collection::stream).collect(Collectors.toList()));
-            if (saveSuccessful) saveMsg.setText("Successfully saved to CSV.");
-            else saveMsg.setText("Did not save to CSV.");
-        }
-    }
-
-    /**
      * Generate left and assigned stats.
      */
     private void generateStats() {
@@ -243,10 +231,9 @@ public class Result extends BorderPane implements AppContent{
      * @return the VBox.
      */
     private VBox controlPanel() {
-        Button clearComp = new Button("Clear Squad Composition");
+        Button clearComp = new Button("Clear filled squads");
         autoFill = new Button(AUTO_FILL_TEXT);
         Button reRunSolver = new Button("Find a Different Setup");
-        Button saveToCSVBtn = new Button("Save Squad Composition to CSV");
         Button sortSquads = new Button("Sort squads the Kez way");
 
         reRunSolver.setOnAction(e -> findNewSetup());
@@ -261,7 +248,6 @@ public class Result extends BorderPane implements AppContent{
                 autoFill.setText(AUTO_FILL_TEXT);
             }
         });
-        saveToCSVBtn.setOnAction(e -> saveToCSV());
         sortSquads.setOnAction(e -> sortPlayerOrder());
 
         HBox squadsControl = new HBox(10);
@@ -296,7 +282,7 @@ public class Result extends BorderPane implements AppContent{
         });
 
         VBox panel = new VBox(10);
-        panel.getChildren().addAll(clearComp, autoFill, reRunSolver, saveToCSVBtn, sortSquads,
+        panel.getChildren().addAll(clearComp, autoFill, reRunSolver, sortSquads,
                 new Region(), new Label("Squads: "), squadsControl,
                 new Region(), new Label("Filter by role: "), roleFilterDropdown);
         panel.setAlignment(Pos.TOP_CENTER);
@@ -347,7 +333,7 @@ public class Result extends BorderPane implements AppContent{
      * Fill trainees into squads automatically.
      */
     private void autoFillTrainees() {
-        SquadComposition initialState = new SquadComposition(Stream.of(commandersAndAides, trainees)
+        SquadComposition initialState = new SquadComposition(Stream.of(trainees, commandersAndAides)
                 .flatMap(Collection::stream).collect(Collectors.toList()), squads, parent.getSolution().getSquadTypeAllowed());
         solver = new AutoAssignTraineeTask(initialState);
         solver.setOnSucceeded(t -> {

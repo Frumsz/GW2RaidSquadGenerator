@@ -16,10 +16,10 @@ import java.util.Set;
  * @version 1.1
  */
 public class Squad {
-	private String squadHandle;
-	private String squadName;
-    private LinkedHashMap<String, Integer> reqBoons = new LinkedHashMap<>();
-    private LinkedHashMap<String, Integer> reqSpecialRoles = new LinkedHashMap<>();
+	private final String squadHandle;
+	private final String squadName;
+    private final LinkedHashMap<String, Integer> reqBoons = new LinkedHashMap<>();
+    private final LinkedHashMap<String, Integer> reqSpecialRoles = new LinkedHashMap<>();
 	private final SimpleBooleanProperty enabled = new SimpleBooleanProperty();
 
     public Squad(String squadHandle, String squadName, String Boons, String SpecialRoles, boolean isDefault) {
