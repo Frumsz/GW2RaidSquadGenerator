@@ -5,8 +5,6 @@ import com.crossroadsinn.settings.Squads;
 import com.crossroadsinn.signups.Player;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +19,7 @@ import java.util.stream.Collectors;
  */
 public class SquadComposition {
 
-    List<Player> playersToSort;
+    List<Player> playersToAssign;
     List<List<Player>> squads;
 	String squadType;
 
@@ -33,20 +31,20 @@ public class SquadComposition {
      */
     public SquadComposition(List<Player> playersToSort, List<List<Player>> squads, String squadType) {
         // Shallow copy lists.
-        this.playersToSort = new ArrayList<>(playersToSort);
+        this.playersToAssign = new ArrayList<>(playersToSort);
         this.squads = squads.stream().map(ArrayList::new).collect(Collectors.toList());
 		this.squadType = squadType;
     }
 
     public SquadComposition(SquadComposition other) {
         // Shallow copy constructor.
-        this.playersToSort = new ArrayList<>(other.getPlayersToSort());
+        this.playersToAssign = new ArrayList<>(other.getPlayersToAssign());
         this.squads = other.getSquads().stream().map(ArrayList::new).collect(Collectors.toList());
 		this.squadType = other.squadType;
     }
 
-    public List<Player> getPlayersToSort() {
-        return playersToSort;
+    public List<Player> getPlayersToAssign() {
+        return playersToAssign;
     }
 
     public List<List<Player>> getSquads() {
@@ -78,7 +76,7 @@ public class SquadComposition {
         for (Map.Entry<String, Integer> specialRole : reqSpecialRoles.entrySet()) {
             if (specialRole.getValue() > 0) {
                 // We need a special role player for this role
-                List<Player> eligablePlayers = playersToSort.stream()
+                List<Player> eligablePlayers = playersToAssign.stream()
                         .filter(p -> p.getAssignedRoleObj().getSpecialRoles().contains(specialRole.getKey())
                                 && p.getAssignedRoleObj().getSpecialRoles().stream().allMatch(playerSpecialRole -> {
                                     // We still need to fill this role OR it is overflowable
@@ -88,7 +86,7 @@ public class SquadComposition {
                     // TODO we can probably prevent this
                     throw new InvalidSolutionException("Filled up wrong, cannot fill up all squads");
                 }
-                squad.add(playersToSort.remove(playersToSort.indexOf(eligablePlayers.get(0))));
+                squad.add(playersToAssign.remove(playersToAssign.indexOf(eligablePlayers.get(0))));
                 // and get stop adding players
                 return true;
             }
@@ -96,7 +94,7 @@ public class SquadComposition {
         for (Map.Entry<String, Integer> boonRole : reqBoons.entrySet()) {
             if (boonRole.getValue() > 0) {
                 // We need a boon player that fills this boon
-                List<Player> eligablePlayers = playersToSort.stream()
+                List<Player> eligablePlayers = playersToAssign.stream()
                         .filter(p -> {
                             // First check if the assigned boons match what we still need, don't want an 10 alac player when you only need 5 for example
                             return p.getAssignedRoleObj().getBoons().containsKey(boonRole.getKey()) && p.getAssignedRoleObj().getBoons().get(boonRole.getKey()) <= boonRole.getValue() &&
@@ -108,22 +106,22 @@ public class SquadComposition {
                     // TODO we can probably prevent this
                     throw new InvalidSolutionException("Filled up wrong, cannot fill up all squads");
                 }
-                squad.add(playersToSort.remove(playersToSort.indexOf(eligablePlayers.get(0))));
+                squad.add(playersToAssign.remove(playersToAssign.indexOf(eligablePlayers.get(0))));
                 // and get stop adding players
                 return true;
             }
         }
         // Boons and special roles filled, check if we have enough commanders and still have leftover to fill up
-        if (squad.stream().filter(Player::isTrainer).count() < 2 && playersToSort.stream().anyMatch(Player::isTrainer)) {
-            List<Player> eligableDPSTrainers = playersToSort.stream().filter(p -> p.getAssignedRoleObj().getDPS() > 0 && p.isTrainer()).collect(Collectors.toList());
-            squad.add(playersToSort.remove(playersToSort.indexOf(eligableDPSTrainers.get(0))));
+        if (squad.stream().filter(Player::isTrainer).count() < 2 && playersToAssign.stream().anyMatch(Player::isTrainer)) {
+            List<Player> eligableDPSTrainers = playersToAssign.stream().filter(p -> p.getAssignedRoleObj().getDPS() > 0 && p.isTrainer()).collect(Collectors.toList());
+            squad.add(playersToAssign.remove(playersToAssign.indexOf(eligableDPSTrainers.get(0))));
             return true;
         }
 
         // Fill rest with dps
-        List<Player> eligableDPSTrainees = playersToSort.stream().filter(p -> p.getAssignedRoleObj().getDPS() > 0 && !p.isTrainer()).collect(Collectors.toList());
+        List<Player> eligableDPSTrainees = playersToAssign.stream().filter(p -> p.getAssignedRoleObj().getDPS() > 0 && !p.isTrainer()).collect(Collectors.toList());
         if (eligableDPSTrainees.size() > 0) {
-            squad.add(playersToSort.remove(playersToSort.indexOf(eligableDPSTrainees.get(0))));
+            squad.add(playersToAssign.remove(playersToAssign.indexOf(eligableDPSTrainees.get(0))));
             return true;
         }
         return false;
@@ -141,16 +139,15 @@ public class SquadComposition {
                 children.add(copy);
             }
         }
-        Collections.shuffle(children);
         return children;
     }
 
     public int heuristic() {
         // Spots left to fill.
-        return playersToSort.size();
+        return playersToAssign.size();
     }
 
     public boolean isSolution() {
-        return playersToSort.isEmpty();
+        return playersToAssign.isEmpty();
     }
 }
