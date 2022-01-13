@@ -59,7 +59,8 @@ public class PlayerListCell extends ListCell<Player> {
             setId("");
         } else {
             this.player = player;
-            this.setTooltip(new Tooltip(getTooltipContent()));
+            // Tooltip is really annoying as it brings focus to the main window
+//            this.setTooltip(new Tooltip(getTooltipContent()));
             setGraphic(getCellGraphic());
             updateStyle();
         }
@@ -67,13 +68,13 @@ public class PlayerListCell extends ListCell<Player> {
 
     public void updateStyle() {
         if (player != null) {
-            if (roleFilter == null || player.getSimpleRoleList().stream().anyMatch(r -> r.equals(roleFilter))) {
+            if (roleFilter == null || player.getRolehandleList().stream().anyMatch(r -> r.equals(roleFilter))) {
                 if (player.getTier().toLowerCase().equals("commander")) setId("comm-visible");
                 else if (player.getTier().toLowerCase().equals("aide")) setId("aide-visible");
                 else setId("player-visible");
             } else {
-                if (player.getTier().toLowerCase().equals("commander")) setId("comm-filtered");
-                else if (player.getTier().toLowerCase().equals("aide")) setId("aide-filtered");
+                if (player.getTier().equalsIgnoreCase("commander")) setId("comm-filtered");
+                else if (player.getTier().equalsIgnoreCase("aide")) setId("aide-filtered");
                 else setId("player-filtered");
             }
         }
@@ -87,7 +88,7 @@ public class PlayerListCell extends ListCell<Player> {
     private HBox getCellGraphic() {
         if (player == null) return null;
         // Update Role assign and reset button graphic.
-        if (player.getAssignedRole() != null) roleAssignAndReset.setGraphic(new ImageView(CROSS_ICON));
+        if (player.getAssignedRoleObj() != null) roleAssignAndReset.setGraphic(new ImageView(CROSS_ICON));
         else roleAssignAndReset.setGraphic(new ImageView(PERSON_ICON));
         HBox graphic = new HBox(10);
         Label playerName = new Label(player.toString());
@@ -103,9 +104,9 @@ public class PlayerListCell extends ListCell<Player> {
      */
     private void toggleRoleAssignAndReset() {
         if (player != null) {
-            if (player.getAssignedRole() == null) {
-                if (RoleSelectPopUp.assignPlayerRolePopup(player)) setGraphic(getCellGraphic());
-            } else player.setAssignedRole(0);
+            if (player.getAssignedRoleObj() == null) {
+                if (RoleSelectPopUp.assignPlayerRolePopup(player, roleFilter)) setGraphic(getCellGraphic());
+            } else player.resetAssignedRole();
             setGraphic(getCellGraphic());
         }
     }
@@ -118,7 +119,7 @@ public class PlayerListCell extends ListCell<Player> {
      * @return The string to use as tooltip.
      */
     private String getTooltipContent() {
-        String roles = String.join(", ", player.getRoleList());
+        String roles = String.join(", ", player.getRolenameList());
         String name = player.getDiscordName().isBlank() ? player.getGw2Account() : player.getDiscordName();
         return String.format("%s\nTier: %s\n%s", name, player.getTier(), roles);
     }

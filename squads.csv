@@ -1,0 +1,11 @@
+squadHandle,squadName,reqBoons,reqSpecialRoles,isDefault
+default,Default,"alacrity:10, quickness:10","tank:1, druid:1, healer:2, banners:1",TRUE
+defaultctank,"default w/ cTank","alacrity:10, quickness:10","forcedctank:1, tank:1, druid:1, healer:2, banners:1",
+matthias,Matthias,"alacrity:10, quickness:10","mattreflect:1, druid:1, healer:2, banners:1",
+deimos,deimos,"alacrity:10, quickness:10","tank:1, druid:1, healer:2, banners:1, handkite:1",
+sh,Soulless Horror,"alacrity:10, quickness:10","tank:2, druid:1, healer:2, banners:1,shpusher:1,epi:1",
+dhuumnotank,Dhuum w/o tank,"alacrity:10, quickness:10","druid:1, healer:2, banners:1,dhuumkite:1",
+dhuumwithtank,Dhuum with tank,"alacrity:10, quickness:10","tank:1, druid:1, healer:2, banners:1,dhuumkite:1",
+qadim1lamp,Qadim solo Lamp,"alacrity:10, quickness:10","tank:1, druid:1, healer:2, banners:1, qadimkite:1, qadimlamp:1",
+qadim2lamp,Qadim duo Lamp,"alacrity:10, quickness:10","tank:1, druid:1, healer:2, banners:1, qadimkite:1, qadimlamp:2",
+qtp,Qadim the Peerless,"alacrity:10, quickness:10","forcedctank:1,tank:1, druid:1, healer:1, banners:1,qtpkite:3",

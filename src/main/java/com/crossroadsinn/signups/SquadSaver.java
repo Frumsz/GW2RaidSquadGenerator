@@ -1,8 +1,8 @@
 package com.crossroadsinn.signups;
 
 import com.crossroadsinn.Main;
-import com.opencsv.CSVWriter;
 import com.crossroadsinn.problem.SquadSolution;
+import com.opencsv.CSVWriter;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -48,37 +48,6 @@ public class SquadSaver {
         }
     }
 
-    /**
-     * Save multiple squad compositions as CSV.
-     * @param squadComps The list of formed squads.
-     */
-    public static boolean saveCompsToCSV(List<SquadSolution> squadComps, List<Player> leftOvers) {
-        CSVWriter writer = null;
-        String chosenDir = chooseDir();
-        if (chosenDir == null) return false;
-        try {
-            File csv = new File(chosenDir);
-            csv.createNewFile();
-            writer = new CSVWriter(new FileWriter(csv));
-
-            for (SquadSolution squadComp : squadComps) {
-                writeSquad(squadComp.getName(), squadComp.getSquads(), writer);
-            }
-
-            writeLeftOvers(leftOvers, writer);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (writer != null) writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public static boolean exportToCSV(List<SquadSolution> squadComps, List<Player> leftOvers, String day) {
         CSVWriter writer = null;
         String chosenDir = chooseDir();
@@ -88,10 +57,12 @@ public class SquadSaver {
             csv.createNewFile();
             writer = new CSVWriter(new FileWriter(csv));
 
-            writer.writeNext(new String[]{"Player name", "Discord name", "Day", "Squad", "Squad Type", "Assigned Role", "Tier", "Roles"});
+            writer.writeNext(new String[]{"Player name", "Discord name", "Discord Ping", "Day", "Squad", "Squad Type", "Assigned Role", "Tier", "Signups", "Roles"});
+			
+			int squadCounter = 0;
 
             for (SquadSolution squadComp : squadComps) {
-                writeSquad(squadComp.getName(), squadComp.getSquads(), day, writer);
+                squadCounter = writeSquad(squadComp.getName(), squadComp.getSquads(), day, writer, squadCounter);
             }
 
             for (Player player : leftOvers) {
@@ -123,7 +94,7 @@ public class SquadSaver {
             writer.writeNext(new String[]{"Squad " + (i + 1)});
             for (Player player : squadList.get(i)) {
                 writer.writeNext(new String[]{player.getGw2Account(), player.getDiscordName(),
-                        player.getAssignedRole(), player.getTier()});
+                        player.getAssignedRoleObj().getRoleHandle(), player.getTier()});
             }
             writer.writeNext(new String[0]); // Empty line;
         }
@@ -135,27 +106,31 @@ public class SquadSaver {
      * @param squadList The squads in the composition.
      * @param writer The CSV writer object.
      * @param day The day of the training.
+	 * @param currentSquadCounter the current counter of the squad number
      */
-    private static void writeSquad(String compName, List<List<Player>> squadList, String day, CSVWriter writer) {
-        for (int i = 0; i < squadList.size(); ++i) {
+    private static int writeSquad(String compName, List<List<Player>> squadList, String day, CSVWriter writer, int currentSquadCounter) {
+        int i = 0;
+		for (; i < squadList.size(); ++i) {
             for (Player player : squadList.get(i)) {
-                writer.writeNext(playerLine(player, day, i+1+"", compName));
+                writer.writeNext(playerLine(player, day, currentSquadCounter+i+1+"", compName));
             }
         }
+		return currentSquadCounter+i;
     }
 
     private static String[] playerLine(Player player, String day, String squad, String squadType) {
-        boolean isComm = player.getTier().toLowerCase().equals("commander") || player.getTier().toLowerCase().equals("aide");
-        String[] roles = player.getRoleList();
+        boolean isComm = player.getTier().equalsIgnoreCase("commander") || player.getTier().equalsIgnoreCase("aide");
         ArrayList<String> line = new ArrayList<>();
         line.add(isComm ? player.getTier() : player.getGw2Account());
         line.add(player.getDiscordName().isEmpty() ? player.getGw2Account() : player.getDiscordName());
+        line.add(player.getDiscordPing().isEmpty() ? player.getGw2Account() : player.getDiscordPing());
         line.add(day);
         line.add(squad);
         line.add(squadType);
-        line.add(player.getAssignedRole() != null ? player.getAssignedRole() : "");
+        line.add(player.getAssignedRoleObj() != null ? player.getAssignedRoleObj().getRoleHandle() : "");
         line.add(isComm ? "-" : player.getTier());
-        line.addAll(Arrays.asList(roles));
+        line.add(player.getBossLvlChoiceAsString());
+        line.addAll(player.getRolenameList());
         return line.toArray(new String[0]);
     }
 
@@ -168,8 +143,8 @@ public class SquadSaver {
         writer.writeNext(new String[]{"Left Overs: "});
         for (Player player : leftOvers) {
             ArrayList<String> line = new ArrayList<>(Arrays.asList(player.getGw2Account(), player.getDiscordName(),
-                    player.getTier(), Integer.toBinaryString(player.getBossLvlChoice())));
-            line.addAll(Arrays.asList(player.getRoleList()));
+                    player.getTier(), player.getBossLvlChoiceAsString()));
+            line.addAll(player.getRolenameList());
             writer.writeNext(line.toArray(new String[0]));
         }
     }
