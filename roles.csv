@@ -1,5 +1,5 @@
 roleHandle,roleName,boons,specialRoles,commRole
-ctank,Chrono Tank,quickness:5,"tank,forcedctank",TRUE
+ctank,Chrono Tank,quickness:5,"tank",TRUE
 hfbtank,HFB Tank,quickness:5,"tank, healer",TRUE
 druid,Druid,,"healer,druid",TRUE
 hfb,Heal FB,quickness:5,"healer,mattreflect",TRUE
@@ -24,3 +24,5 @@ mattreflect,"DPS (Reflect)",,"mattreflect",
 handkite,"Handkite",,"handkite",
 qadimkite,"DPS (Kiter)",,"qadimkite",
 qadimlamp,"DPS (Lamp)",,"qadimlamp",
+druidtank,"Druid (Tank)",,"tank,healer,druid",
+bt,"Boonthief",quickness:5,,
