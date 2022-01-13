@@ -8,8 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.*;
 
 
 /**
@@ -18,7 +17,7 @@ import java.util.Hashtable;
  * @version 1.1
  */
 public class Squads {
-	private static final Hashtable<String, Squad> squads = new Hashtable<>();
+	private static final TreeMap<String, Squad> squads = new TreeMap<>();
 	public static void init() {
 		try {
 			File csvFile = new File("squads.csv");
