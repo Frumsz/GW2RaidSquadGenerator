@@ -7,13 +7,27 @@ import com.crossroadsinn.settings.Squads;
 import com.crossroadsinn.signups.Player;
 
 import java.util.*;
-import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 
 /**
  * An iteration of a valid squad plan in the making
  */
 public class SquadPlan {
+
+	static class RoleTestingInput {
+		final Role playerRole;
+		final String roleType;
+		final int requiredAmount;
+
+		RoleTestingInput(Role role, String roleType, int requiredAmount) {
+			this.playerRole = role;
+			this.roleType = roleType;
+			this.requiredAmount = requiredAmount;
+		}
+	}
+
 	private final int SQUAD_SIZE = 10;
     private int numSquads;
     private final List<Player> trainers;
@@ -27,8 +41,14 @@ public class SquadPlan {
 	//save what squads have been used to generate to parse it on for SquadComposition.java
 	private ArrayList<String> squadTypes = new ArrayList<>();
 
-	BiPredicate<Role, String> specialRoleTester = (playerRole, roleType) -> playerRole.getSpecialRoles().contains(roleType);
-	BiPredicate<Role, String> boonRoleTester = (playerRole, roleType) -> playerRole.getBoons().containsKey(roleType);
+	Predicate<RoleTestingInput> specialRoleTester = (input) -> input.playerRole.getSpecialRoles().contains(input.roleType);
+	Predicate<RoleTestingInput> boonRoleTester = (input) -> {
+		if (input.playerRole.getBoons().containsKey(input.roleType)) {
+			// Only if we don't provide too much boons we are a valid role!
+			return input.playerRole.getBoons().get(input.roleType) <= input.requiredAmount;
+		}
+		return false;
+	};
 
 	// Linked hashmap as we want a certain order to the roles (for filling purposes you want multi-covering roles first)
     private LinkedHashMap<String, Integer> reqBoons = new LinkedHashMap<>();
@@ -182,18 +202,20 @@ public class SquadPlan {
 	 *
 	 * @param roleType Name of the type a role has to fulfill (e.g. "tank" or "quickness"
 	 * @param roleToTypeMapper To get the role type, this allows the method to be used for both boons and special roles
+	 * @param requiredAmount Amount we still require, for special roles this will be usually 1 or 2, but for boons it might be 5 or 10
+	 *                       This is required to not grab an alacrigade player (that provides 10 alac) when you only need 5
 	 * @return a possible solution or empty if this branch was not fruitful or we can't add more of the roleType
 	 */
-	private Optional<SquadPlan> getNextSquadPlanForRoleType(String roleType, BiPredicate<Role, String> roleToTypeMapper) throws Exception {
+	private Optional<SquadPlan> getNextSquadPlanForRoleType(String roleType, Predicate<RoleTestingInput> roleToTypeMapper, int requiredAmount) throws Exception {
 		// Get a filtered list of player indexes that can play the roleType we want
 		List<Player> rolePlayers = players.stream()
-				.filter(es -> es.getRoles().stream().anyMatch(s -> roleToTypeMapper.test(s, roleType)))
+				.filter(es -> es.getRoles().stream().anyMatch(s -> roleToTypeMapper.test(new RoleTestingInput(s, roleType, requiredAmount))))
 				.collect(Collectors.toList());
 
 		for (Player player : rolePlayers) {
 			SquadPlan copy = new SquadPlan(this);
 			// .get() is fine as we already filtered the players
-			if (copy.setPlayer(player, player.getRoles().stream().filter(rl -> roleToTypeMapper.test(rl, roleType)).findFirst().get())) {
+			if (copy.setPlayer(player, player.getRoles().stream().filter(rl -> roleToTypeMapper.test(new RoleTestingInput(rl, roleType, requiredAmount))).findFirst().get())) {
 				SquadPlan possibleResult = copy.expandOrReturnSolution();
 				if (possibleResult != null) {
 					return Optional.of(possibleResult);
@@ -209,10 +231,11 @@ public class SquadPlan {
 	 * @param roleTypeFetch Predicate to get the right roleType from the Role
 	 * @return a possible solution or empty if this branch was not fruitful or we can't add more of the roleType
 	 */
-	private Optional<SquadPlan> addPlayersForRoleType(LinkedHashMap<String, Integer> requiredRolesMap, BiPredicate<Role, String> roleTypeFetch) throws Exception {
+	private Optional<SquadPlan> addPlayersForRoleType(LinkedHashMap<String, Integer> requiredRolesMap, Predicate<RoleTestingInput> roleTypeFetch) throws Exception {
 		for (String requiredRoleType : requiredRolesMap.keySet()) {
-			if (requiredRolesMap.get(requiredRoleType) > 0) {
-				Optional<SquadPlan> possibleResult = getNextSquadPlanForRoleType(requiredRoleType, roleTypeFetch);
+			int requiredAmount = requiredRolesMap.get(requiredRoleType);
+			if (requiredAmount > 0) {
+				Optional<SquadPlan> possibleResult = getNextSquadPlanForRoleType(requiredRoleType, roleTypeFetch, requiredAmount);
 				if (possibleResult.isPresent()) {
 					return possibleResult;
 				}
@@ -261,7 +284,7 @@ public class SquadPlan {
 			return this;
 		}
 		// First add the special roles, if not required we will continue
-		Optional<SquadPlan> optAddedPlayer =  addPlayersForRoleType(reqSpecialRoles, specialRoleTester);
+		Optional<SquadPlan> optAddedPlayer = addPlayersForRoleType(reqSpecialRoles, specialRoleTester);
 		if (optAddedPlayer.isPresent()) {
 			return optAddedPlayer.get();
 		}
