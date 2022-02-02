@@ -307,7 +307,7 @@ public class SquadPlan {
 	 * Note, this should only be used if you already have the special roles/boons filled
 	 */
 	public boolean checkIfStillEnoughDPS() {
-		return players.stream().filter(p -> p.getRoles().stream().anyMatch(r -> r.getDPS() > 0)).count() > reqPlayers;
+		return players.stream().filter(p -> p.getRoles().stream().anyMatch(r -> r.getDPS() > 0)).count() >= reqPlayers;
 	}
 
     /**
