@@ -1,4 +1,8 @@
 
+### 1.3.1 Frums
+* Fixed a bug in the algorithm that attempted to use roles that overfilled boons, resulting in no result in very specific setups while there would be possibilities
+* Fixed the DPS leftover check that made the squadmaker require more players than it actually needs
+
 ### 1.3 Frums
 * Restructured code quite a bit
 * Updated the squad building algorithm to attempt to build squads more efficiently
