@@ -214,8 +214,18 @@ public class SquadPlan {
 
 		for (Player player : rolePlayers) {
 			SquadPlan copy = new SquadPlan(this);
-			// .get() is fine as we already filtered the players
-			if (copy.setPlayer(player, player.getRoles().stream().filter(rl -> roleToTypeMapper.test(new RoleTestingInput(rl, roleType, requiredAmount))).findFirst().get())) {
+			List<Role> validPlayerRoles = player.getRoles().stream().filter(rl -> roleToTypeMapper.test(new RoleTestingInput(rl, roleType, requiredAmount))).collect(Collectors.toList());
+
+			// TODO this needs to improved as it should try all the different roles that a player could fit
+			// But for now just shuffle and grab, randomizes the roles we pick on the player, this is only required for people that could fill certain roles multiple times (e.g. ctank/hfbtank)
+			// This way we ignore the roles.csv order that could sometimes stall the squad filling
+			// Reason why we don't just loop through all valid roles is that it could mean that a player gets set to multiple roles due to how "setPlayer" mutates "this"
+			// This problem can be fixed, but this only really matters in really tight fits of the solution
+			if (validPlayerRoles.size() > 1) {
+				Collections.shuffle(validPlayerRoles);
+			}
+			Role validRole = validPlayerRoles.get(0);
+			if (copy.setPlayer(player, validRole)) {
 				SquadPlan possibleResult = copy.expandOrReturnSolution();
 				if (possibleResult != null) {
 					return Optional.of(possibleResult);
