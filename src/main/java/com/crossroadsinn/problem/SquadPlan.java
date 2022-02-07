@@ -41,19 +41,20 @@ public class SquadPlan {
 	//save what squads have been used to generate to parse it on for SquadComposition.java
 	private ArrayList<String> squadTypes = new ArrayList<>();
 
-	Predicate<RoleTestingInput> specialRoleTester = (input) -> input.playerRole.getSpecialRoles().contains(input.roleType);
-	Predicate<RoleTestingInput> boonRoleTester = (input) -> {
-		if (input.playerRole.getBoons().containsKey(input.roleType)) {
-			// Only if we don't provide too much boons we are a valid role!
-			return input.playerRole.getBoons().get(input.roleType) <= input.requiredAmount;
-		}
-		return false;
-	};
-
 	// Linked hashmap as we want a certain order to the roles (for filling purposes you want multi-covering roles first)
     private LinkedHashMap<String, Integer> reqBoons = new LinkedHashMap<>();
     private LinkedHashMap<String, Integer> reqSpecialRoles = new LinkedHashMap<>();
+    private List<String> forbiddenRoles = new ArrayList<>();
 	private int reqPlayers;
+
+	Predicate<RoleTestingInput> specialRoleTester = (input) -> !forbiddenRoles.contains(input.playerRole.getRoleHandle()) && input.playerRole.getSpecialRoles().contains(input.roleType);
+	Predicate<RoleTestingInput> boonRoleTester = (input) -> {
+		if (input.playerRole.getBoons().containsKey(input.roleType)) {
+			// Only if we don't provide too much boons we are a valid role!
+			return !forbiddenRoles.contains(input.playerRole.getRoleHandle()) && input.playerRole.getBoons().get(input.roleType) <= input.requiredAmount;
+		}
+		return false;
+	};
 
 	/**
 	 * Build up the initial state and start of the search, the input will be shuffled on creation in a new list
@@ -114,6 +115,8 @@ public class SquadPlan {
 			}
 			reqSpecialRoles.put(key,value);
 		}
+
+		forbiddenRoles = new ArrayList<>(squadToBuild.getForbiddenRoles());
 	}
 
     /**
@@ -131,6 +134,7 @@ public class SquadPlan {
 		this.reqBoons = new LinkedHashMap<>(other.reqBoons);
 		this.reqSpecialRoles = new LinkedHashMap<>(other.reqSpecialRoles);
 		this.searchResultsState = other.searchResultsState;
+		this.forbiddenRoles = other.forbiddenRoles;
     }
 
     public int getNumSquads() {
@@ -213,22 +217,18 @@ public class SquadPlan {
 				.collect(Collectors.toList());
 
 		for (Player player : rolePlayers) {
-			SquadPlan copy = new SquadPlan(this);
 			List<Role> validPlayerRoles = player.getRoles().stream().filter(rl -> roleToTypeMapper.test(new RoleTestingInput(rl, roleType, requiredAmount))).collect(Collectors.toList());
-
-			// TODO this needs to improved as it should try all the different roles that a player could fit
-			// But for now just shuffle and grab, randomizes the roles we pick on the player, this is only required for people that could fill certain roles multiple times (e.g. ctank/hfbtank)
-			// This way we ignore the roles.csv order that could sometimes stall the squad filling
-			// Reason why we don't just loop through all valid roles is that it could mean that a player gets set to multiple roles due to how "setPlayer" mutates "this"
-			// This problem can be fixed, but this only really matters in really tight fits of the solution
+			// Shuffle and grab, randomizes the roles we pick on the player, this is to help prevent having a role bias
 			if (validPlayerRoles.size() > 1) {
 				Collections.shuffle(validPlayerRoles);
 			}
-			Role validRole = validPlayerRoles.get(0);
-			if (copy.setPlayer(player, validRole)) {
-				SquadPlan possibleResult = copy.expandOrReturnSolution();
-				if (possibleResult != null) {
-					return Optional.of(possibleResult);
+			for(Role validRole: validPlayerRoles) {
+				SquadPlan copy = new SquadPlan(this);
+				if (copy.setPlayer(player, validRole)) {
+					SquadPlan possibleResult = copy.expandOrReturnSolution();
+					if (possibleResult != null) {
+						return Optional.of(possibleResult);
+					}
 				}
 			}
 		}

@@ -1,28 +1,29 @@
-roleHandle,roleName,boons,specialRoles,commRole
-ctank,Chrono Tank,quickness:5,"tank",TRUE
-hfbtank,HFB Tank,quickness:5,"tank, healer",TRUE
-druid,Druid,,"healer,druid",TRUE
-hfb,Heal FB,quickness:5,"healer,mattreflect",TRUE
-healscrapper,Heal Scrapper,quickness:5,healer,TRUE
-healtempest,Heal Tempest,,healer,TRUE
-qchrono,Quickchrono,quickness:5,"mattreflect",TRUE
-qrapper,Quick Scrapper,quickness:5,,TRUE
-qrappertank,"Qrapper (Tank)",quickness:5,tank,TRUE
-qfb,Quickbrand,quickness:5,,TRUE
-qfbtank,Quickbrand (Tank),quickness:5,"tank",TRUE
-alacgade,Alacrigade,alacrity:10,,TRUE
-scam,SCAM,alacrity:5,"mattreflect",TRUE
-rrrenegade,RR Renegade,alacrity:5,,TRUE
-banners,Banners,,banners,TRUE
-dps,DPS,,dps,TRUE
-qtpkitede,"Deadeye (Pylon)",,"dps,qtpkite",
-qtpkitescourge,"Scourge (Pylon)",,"dps,qtpkite",
-shpusher,"Druid (Pusher)",,"druid,healer,shpusher",
-dhuumkite,"Offheal (Kiter)",,"healer,dhuumkite",
-shepi,"Scourge (Epidemic)",,"dps,epi",
-mattreflect,"DPS (Reflect)",,"mattreflect",
-handkite,"Handkite",,"handkite",
-qadimkite,"DPS (Kiter)",,"qadimkite",
-qadimlamp,"DPS (Lamp)",,"qadimlamp",
-druidtank,"Druid (Tank)",,"tank,healer,druid",
-bt,"Boonthief",quickness:5,,
+roleHandle,roleName,boons,specialRoles,commRole,overflowable
+ctank,Chrono Tank,quickness:5,"tank,chronopull",true,false
+hfbtank,HFB Tank,quickness:5,"tank,healer",true,false
+druid,Druid,,"healer,druid",true,false
+hfb,Heal FB,quickness:5,"healer,mattreflect",true,false
+healscrapper,Heal Scrapper,quickness:5,healer,true,false
+healtempest,Heal Tempest,,healer,true,false
+qchrono,Quickchrono,quickness:5,"mattreflect,chronopull",true,false
+qrapper,Quick Scrapper,quickness:5,,true,false
+qrappertank,"Qrapper (Tank)",quickness:5,tank,true,false
+qfb,Quickbrand,quickness:5,,true,false
+qfbtank,Quickbrand (Tank),quickness:5,"tank",true,false
+alacgade,Alacrigade,alacrity:10,,true,false
+scam,SCAM,alacrity:5,"mattreflect",true,false
+rrrenegade,RR Renegade,alacrity:5,,true,false
+banners,Banners,,banners,true,false
+dps,DPS,,dps,true,true
+qtpkitede,"Deadeye (Pylon)",,"dps,qtpkite",,false
+qtpkitescourge,"Scourge (Pylon)",,"dps,qtpkite",,false
+shpusher,"Druid (Pusher)",,"druid,healer,shpusher",,false
+dhuumkite,"Offheal (Kiter)",,"healer,dhuumkite",,false
+shepi,"Scourge (Epidemic)",,"dps,epi",,false
+mattreflect,"DPS (Reflect)",,"mattreflect",,true
+chronopull,"Chrono pull (ctank or qchrono)",,"chronopull",,true
+handkite,"Handkite",,"handkite",,false
+qadimkite,"DPS (Kiter)",,"qadimkite",,false
+qadimlamp,"DPS (Lamp)",,"qadimlamp",,false
+druidtank,"Druid (Tank)",,"tank,healer,druid",,false
+bt,"Boonthief",quickness:5,,,false

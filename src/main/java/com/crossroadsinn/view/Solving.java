@@ -92,7 +92,7 @@ public class Solving extends VBox implements AppContent {
      */
     private void startSolving() {
         progressBar.setProgress(0);
-        ListChangeListener<SquadPlan> resultListener = c -> progressBar.setProgress(((double)c.getList().size() / 100.0));
+        ListChangeListener<SquadPlan> resultListener = c -> progressBar.setProgress(((double)c.getList().size() / SolveSquadPlanTask.MAX_RESULT));
 
         solver = new SolveSquadPlanTask(parent.getSelectedCommanderList(),
                 parent.getSelectedTraineeList(), parent.getMaxSquads(), resultListener);

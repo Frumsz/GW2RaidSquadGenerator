@@ -54,6 +54,7 @@ public class SquadComposition {
     /**
      * Place first player of list into squad at given index.
      * @return Whether the resulting state of the CSP satisfies all constraints.
+     * TODO this currently assumes trainers on DPS to fill them up 2 each in squads, which means it doesn't always do that correctly
      */
     public boolean addPlayersToNextSquad(int squadIndex) {
         List<Player> squad = squads.get(squadIndex);
@@ -114,8 +115,10 @@ public class SquadComposition {
         // Boons and special roles filled, check if we have enough commanders and still have leftover to fill up
         if (squad.stream().filter(Player::isTrainer).count() < 2 && playersToAssign.stream().anyMatch(Player::isTrainer)) {
             List<Player> eligableDPSTrainers = playersToAssign.stream().filter(p -> p.getAssignedRoleObj().getDPS() > 0 && p.isTrainer()).collect(Collectors.toList());
-            squad.add(playersToAssign.remove(playersToAssign.indexOf(eligableDPSTrainers.get(0))));
-            return true;
+            if (eligableDPSTrainers.size() > 0) {
+                squad.add(playersToAssign.remove(playersToAssign.indexOf(eligableDPSTrainers.get(0))));
+                return true;
+            }
         }
 
         // Fill rest with dps

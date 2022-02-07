@@ -24,8 +24,13 @@ public class SolveSquadPlanTask extends Task<SquadPlan> {
     private final ArrayList<Player> commanders, trainees;
     private final int maxSquads;
     private final ObservableList<SquadPlan> results;
+
+    // We basically search for a maximum of X seconds for the SMALL_RESULT_SIZE
+    // If we find a lot of solutions very fast, we can go up to MAX_RESULT but only up to MAX_SEARCH_DURATION_SECONDS_SMALL_RESULT_SIZE
     private final int MAX_SEARCH_DURATION_SECONDS = 30;
-    private final int MAX_RESULT = 100;
+    private final int MAX_SEARCH_DURATION_SECONDS_SMALL_RESULT_SIZE = 1;
+    public static final int MAX_RESULT = 1000;
+    private final int SMALL_RESULT_SIZE = 100;
     private int minHeuristic = Integer.MAX_VALUE;
 
     public SolveSquadPlanTask(ArrayList<Player> commanders, ArrayList<Player> trainees, int maxSquads, ListChangeListener<SquadPlan> resultListener) {
@@ -101,8 +106,9 @@ public class SolveSquadPlanTask extends Task<SquadPlan> {
                 if (solution != null) {
                     results.add(solution);
                 }
-                // if we have 100 results just pick the best one, lowest heuristic
-                if (results.size() >= MAX_RESULT || searchDuration > MAX_SEARCH_DURATION_SECONDS) {
+                // if we have enough results (or took too long) just pick the best one, lowest heuristic
+                boolean smallBatchAcceptable = results.size() >= SMALL_RESULT_SIZE && searchDuration >= MAX_SEARCH_DURATION_SECONDS_SMALL_RESULT_SIZE;
+                if (results.size() >= MAX_RESULT || searchDuration > MAX_SEARCH_DURATION_SECONDS || smallBatchAcceptable) {
                     System.out.println("Successful in: " + searchDuration + " seconds and " + results.size() + " results.");
                     return results.stream().min(Comparator.comparingInt(SquadPlan::heuristic)).get();
                 }

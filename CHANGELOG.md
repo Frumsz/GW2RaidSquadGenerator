@@ -1,3 +1,7 @@
+### 1.4.0 Frums
+* Added the ability to add `forbidden` roles to squads to prevent them from being used in solutions
+* Added the ability to mark roles as `overflowable` which means you can never have too many of them
+* Fixed a bug in the algorithm that always used the first possible (and only the first possible) role to match a criteria even though you had multiple roles that could fill that, this prevented some solutions from being created 
 
 ### 1.3.1 Frums
 * Fixed a bug in the algorithm that attempted to use roles that overfilled boons, resulting in no result in very specific setups while there would be possibilities

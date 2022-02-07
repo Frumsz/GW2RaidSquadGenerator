@@ -9,10 +9,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -24,7 +22,7 @@ public class Roles {
 	private static final LinkedHashMap<String, Role> roles = new LinkedHashMap<>();
 	// We don't want to overfill roles like healers, but reflect for matthias is fine as it simply a special property for some roles,
 	// This is used to check if special roles aren't overflowing the squad, you cannot have too many of these basically
-	private static final List<String> OVERFLOWABLE_ROLES = List.of("mattreflect", "dps");
+	private static List<String> OVERFLOWABLE_ROLES = new ArrayList<>();
 
 	public static void init() {
 		try {
@@ -89,6 +87,10 @@ public class Roles {
 		String boons = roleLine[2].trim();
 		String specialRoles = roleLine[3].trim();
 		boolean commRole = roleLine[4].toLowerCase().contains("true");
+		boolean overFlowable = roleLine[5].toLowerCase().contains("true");
+		if (overFlowable) {
+			OVERFLOWABLE_ROLES.add(roleHandle);
+		}
 		addRole(roleHandle,roleName,boons,specialRoles,commRole);		
 	}
 		

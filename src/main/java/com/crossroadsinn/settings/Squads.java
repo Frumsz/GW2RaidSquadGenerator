@@ -29,8 +29,8 @@ public class Squads {
         }
 	}
 
-	public static void addSquad(String squadHandle, String squadName, String reqBoons, String reqSpecialRoles, boolean isDefault) {
-		squads.put(squadHandle,new Squad(squadHandle, squadName, reqBoons, reqSpecialRoles, isDefault));
+	public static void addSquad(String squadHandle, String squadName, String reqBoons, String reqSpecialRoles, boolean isDefault, String forbiddenRoles) {
+		squads.put(squadHandle,new Squad(squadHandle, squadName, reqBoons, reqSpecialRoles, isDefault, forbiddenRoles));
     }
 	
 	public static Squad getSquad(String squadHandle) {
@@ -73,6 +73,7 @@ public class Squads {
 		String reqBoons = SquadLine[2].trim();
 		String reqSpecialRoles = SquadLine[3].trim();
 		boolean isDefault = SquadLine[4].toLowerCase().contains("true");
-		addSquad(squadHandle,squadName,reqBoons,reqSpecialRoles,isDefault);		
+		String forbiddenRoles = SquadLine[5].trim();
+		addSquad(squadHandle,squadName,reqBoons,reqSpecialRoles,isDefault, forbiddenRoles);
 	}
 }

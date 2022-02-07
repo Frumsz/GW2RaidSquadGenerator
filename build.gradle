@@ -7,7 +7,7 @@ plugins {
 
 mainClassName = 'com.crossroadsinn.Main'
 group 'Crossroads Inn'
-version '1.0'
+version '1.4.0'
 
 sourceCompatibility = 11
 targetCompatibility = 11

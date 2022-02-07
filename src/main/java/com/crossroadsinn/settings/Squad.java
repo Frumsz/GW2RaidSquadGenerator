@@ -5,11 +5,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
+
 /**
  * A class that can hold information about a squad.
  * @author moon
@@ -20,9 +17,10 @@ public class Squad {
 	private final String squadName;
     private final LinkedHashMap<String, Integer> reqBoons = new LinkedHashMap<>();
     private final LinkedHashMap<String, Integer> reqSpecialRoles = new LinkedHashMap<>();
+	private final List<String> forbiddenRoles = new ArrayList<>();
 	private final SimpleBooleanProperty enabled = new SimpleBooleanProperty();
 
-    public Squad(String squadHandle, String squadName, String Boons, String SpecialRoles, boolean isDefault) {
+    public Squad(String squadHandle, String squadName, String Boons, String SpecialRoles, boolean isDefault, String forbiddenRolesInput) {
         this.squadHandle = squadHandle;
         this.squadName = squadName;
 		this.enabled.set(isDefault);
@@ -42,6 +40,8 @@ public class Squad {
 				reqSpecialRoles.put(roleValuePair[0],Integer.parseInt(roleValuePair[1]));
 			}
 		}
+        String[] forbiddenRolesSplit = forbiddenRolesInput.split("\\s*,\\s*");
+		forbiddenRoles.addAll(Arrays.asList(forbiddenRolesSplit));
     }
 
     public String getSquadHandle() {
@@ -69,5 +69,9 @@ public class Squad {
 
 	public void setEnabled(boolean enabled) {
     	this.enabled.set(enabled);
+	}
+
+	public List<String> getForbiddenRoles() {
+		return forbiddenRoles;
 	}
 }
