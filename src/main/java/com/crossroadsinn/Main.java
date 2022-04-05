@@ -30,7 +30,7 @@ public class Main extends Application {
 
     static {
         APP_NAME = "Squad Maker";
-        VERSION = "1.4.0";
+        VERSION = "1.5.0";
         THEME = Style.LIGHT;
         themeListeners = new ArrayList<>();
     }

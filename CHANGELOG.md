@@ -1,4 +1,4 @@
-### 1.5.1 Frums
+### 1.5.0 Frums
 Rewritten auto-assign to be usable both as autofiller and solution verifier, this means it should no longer come up with solutions that are impossible to split up into squads.
 The downside to this is that it makes finding a solution somewhat slower.
 
