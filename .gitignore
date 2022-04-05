@@ -7,7 +7,7 @@
 bin/
 squad-compositions.csv
 src/main/resources/module-info.java
-signups *.csv
+signups*.csv
 
 # Ignore Gradle GUI config
 gradle-com.crossroadsinn.app.setting

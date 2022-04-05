@@ -9,7 +9,6 @@ import com.crossroadsinn.signups.Player;
 import com.crossroadsinn.settings.Squads;
 import com.crossroadsinn.settings.Squad;
 
-
 import java.util.*;
 import java.util.ArrayList;
 
@@ -30,7 +29,7 @@ public class SolveSquadPlanTask extends Task<SquadPlan> {
     private final int MAX_SEARCH_DURATION_SECONDS = 30;
     private final int MAX_SEARCH_DURATION_SECONDS_SMALL_RESULT_SIZE = 1;
     public static final int MAX_RESULT = 1000;
-    private final int SMALL_RESULT_SIZE = 100;
+    private final int SMALL_RESULT_SIZE = 50;
     private int minHeuristic = Integer.MAX_VALUE;
 
     public SolveSquadPlanTask(ArrayList<Player> commanders, ArrayList<Player> trainees, int maxSquads, ListChangeListener<SquadPlan> resultListener) {
@@ -76,7 +75,7 @@ public class SolveSquadPlanTask extends Task<SquadPlan> {
             try {
                 solution = squadPlanState.expandOrReturnSolution();
             } catch (Exception e) {
-                System.out.println("Failed to find, try again");
+                // Failed to find, try again
             }
             if (solution == null) {
                 System.out.println("Too many failures, need to start of differently, current results: " + results.size());

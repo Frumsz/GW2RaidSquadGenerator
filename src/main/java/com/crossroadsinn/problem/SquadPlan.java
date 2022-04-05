@@ -2,9 +2,10 @@ package com.crossroadsinn.problem;
 
 import com.crossroadsinn.settings.Role;
 import com.crossroadsinn.settings.Roles;
-import com.crossroadsinn.settings.Squad;
 import com.crossroadsinn.settings.Squads;
 import com.crossroadsinn.signups.Player;
+import com.crossroadsinn.squadassigning.SelectionAssigner;
+import com.crossroadsinn.squadassigning.SquadUtilities;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -92,31 +93,9 @@ public class SquadPlan {
 
 		// Build up the required roles
 		for (int i = 0; i < numSquads; i++) {
-			buildSquadRequirements();
+			SquadUtilities.buildSquadRequirements(squadTypeAllowed, reqBoons, reqSpecialRoles);
+			forbiddenRoles = new ArrayList<>(Squads.getSquad(squadTypeAllowed).getForbiddenRoles());;
 		}
-	}
-
-	private void buildSquadRequirements() {
-		Squad squadToBuild = Squads.getSquad(squadTypeAllowed);
-		//add requirements - boons
-		for (String key : squadToBuild.getReqBoons().keySet()) {
-			int value = squadToBuild.getReqBoons().get(key);
-			if (reqBoons.containsKey(key)) {
-				value += reqBoons.get(key);
-			}
-			reqBoons.put(key,value);
-		}
-
-		//add requirements - roles
-		for (String key : squadToBuild.getReqSpecialRoles().keySet()) {
-			int value = squadToBuild.getReqSpecialRoles().get(key);
-			if (reqSpecialRoles.containsKey(key)) {
-				value += reqSpecialRoles.get(key);
-			}
-			reqSpecialRoles.put(key,value);
-		}
-
-		forbiddenRoles = new ArrayList<>(squadToBuild.getForbiddenRoles());
 	}
 
     /**
@@ -198,9 +177,11 @@ public class SquadPlan {
 				}
 			}
 		}
-        // Let the algorithm know we can dig deeper into this solution
-        return true;
-    }
+		// Attempt to "auto-fill" all selected trainees, this will only give a result if all players can be assigned
+		// This is to ensure we don't create a solution which works when pooling all squads, but can't be created
+		SelectionAssigner result = new SelectionAssigner(assigned, numSquads, squadTypeAllowed).assignToSquads();
+		return result != null;
+	}
 
 	/**
 	 *
@@ -347,15 +328,21 @@ public class SquadPlan {
      * Calculates the heuristic, the lower the better we deem the solution
      * @return the heuristic value for this plan.
      */
-    public int heuristic() {
-    	// Prefer having 5 dps
-		int notDpsPlayers = (int) assigned.values().stream().filter(r -> r.getDPS() == 0).count();
+	public int heuristic() {
+		// Prefer role compression, most new people learn bosses on dps, so try to fit the most dps
+		int notDpsPlayers = (int) assigned.values().stream().filter(r -> r.getDPS() == 0).count() * 10;
+
+		// Has exactly one druid healer, this is really helpfull still for beginner squads
+		int exactlyOneDruidHealer = (int) assigned.values().stream().filter(r -> "druid".equalsIgnoreCase(r.getRoleHandle())).count() == 1 ? 0 : 1000;
+
+		// If we have more than one druid, yeah that is not too great, it might lead to some grumpy people in trainerroom :D
+		int hasMoreThanOneDruid = (int) assigned.values().stream().filter(r -> "druid".equalsIgnoreCase(r.getRoleHandle())).count() > 1 ? 5000 : 0;
 
 		// However we want to try to get commanders on DPS if possible, so weigh it more heavily
-		int commNotAsDps = (int) assigned.entrySet().stream().filter(e -> e.getKey().isTrainer()).filter(r -> r.getValue().getDPS() == 0).count() * 50;
+		int commNotAsDps = (int) assigned.entrySet().stream().filter(e -> e.getKey().isTrainer()).filter(r -> r.getValue().getDPS() == 0).count() * 100;
 
-		return notDpsPlayers + commNotAsDps;
-    }
+		return notDpsPlayers + commNotAsDps + exactlyOneDruidHealer + hasMoreThanOneDruid;
+	}
 
     /**
      * Checks if we still require players

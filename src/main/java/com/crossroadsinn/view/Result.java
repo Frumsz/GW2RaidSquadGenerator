@@ -1,12 +1,13 @@
 package com.crossroadsinn.view;
 
-import com.crossroadsinn.problem.SquadComposition;
 import com.crossroadsinn.settings.Roles;
 import com.crossroadsinn.settings.Squads;
 import com.crossroadsinn.components.PlayerListCell;
 import com.crossroadsinn.components.PlayerListView;
 import com.crossroadsinn.components.RoleStatRow;
 import com.crossroadsinn.components.RolesStatTable;
+import com.crossroadsinn.squadassigning.PlayerSquad;
+import com.crossroadsinn.squadassigning.SelectionAssigner;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -18,7 +19,6 @@ import com.crossroadsinn.problem.SquadPlan;
 import com.crossroadsinn.problem.SquadSolution;
 import com.crossroadsinn.search.AutoAssignTraineeTask;
 import com.crossroadsinn.signups.Player;
-import com.crossroadsinn.signups.SquadSaver;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -333,16 +333,20 @@ public class Result extends BorderPane implements AppContent{
      * Fill trainees into squads automatically.
      */
     private void autoFillTrainees() {
-        SquadComposition initialState = new SquadComposition(Stream.of(trainees, commandersAndAides)
-                .flatMap(Collection::stream).collect(Collectors.toList()), squads, parent.getSolution().getSquadTypeAllowed());
-        solver = new AutoAssignTraineeTask(initialState);
+        SquadPlan currentSquadplan = parent.getSolution();
+        SelectionAssigner result = new SelectionAssigner(currentSquadplan.getAssigned(), currentSquadplan.getNumSquads(),currentSquadplan.getSquadTypeAllowed());
+        solver = new AutoAssignTraineeTask(result);
         solver.setOnSucceeded(t -> {
-            if (solver.getValue() == null) setSquads(null);
-            else setSquads(solver.getValue().getSquads());
+            if (solver.getValue() == null){
+                setSquads(null);
+            } else {
+                setSquads(solver.getValue().getPlayersFlattened());
+            }
             autoFill.setText(AUTO_FILL_TEXT);
             solver = null;
             sortPlayerOrder();
         });
+
         Thread thread = new Thread(solver);
         thread.start();
     }

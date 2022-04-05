@@ -1,29 +1,47 @@
 roleHandle,roleName,boons,specialRoles,commRole,overflowable
-ctank,Chrono Tank,quickness:5,"tank,chronopull",true,false
-hfbtank,HFB Tank,quickness:5,"tank,healer",true,false
-druid,Druid,,"healer,druid",true,false
-hfb,Heal FB,quickness:5,"healer,mattreflect",true,false
-healscrapper,Heal Scrapper,quickness:5,healer,true,false
-healtempest,Heal Tempest,,healer,true,false
-qchrono,Quickchrono,quickness:5,"mattreflect,chronopull",true,false
-qrapper,Quick Scrapper,quickness:5,,true,false
-qrappertank,"Qrapper (Tank)",quickness:5,tank,true,false
-qfb,Quickbrand,quickness:5,,true,false
-qfbtank,Quickbrand (Tank),quickness:5,"tank",true,false
-alacgade,Alacrigade,alacrity:10,,true,false
-scam,SCAM,alacrity:5,"mattreflect",true,false
-rrrenegade,RR Renegade,alacrity:5,,true,false
-banners,Banners,,banners,true,false
-dps,DPS,,dps,true,true
-qtpkitede,"Deadeye (Pylon)",,"dps,qtpkite",,false
-qtpkitescourge,"Scourge (Pylon)",,"dps,qtpkite",,false
-shpusher,"Druid (Pusher)",,"druid,healer,shpusher",,false
-dhuumkite,"Offheal (Kiter)",,"healer,dhuumkite",,false
-shepi,"Scourge (Epidemic)",,"dps,epi",,false
-mattreflect,"DPS (Reflect)",,"mattreflect",,true
-chronopull,"Chrono pull (ctank or qchrono)",,"chronopull",,true
-handkite,"Handkite",,"handkite",,false
-qadimkite,"DPS (Kiter)",,"qadimkite",,false
-qadimlamp,"DPS (Lamp)",,"qadimlamp",,false
-druidtank,"Druid (Tank)",,"tank,healer,druid",,false
-bt,"Boonthief",quickness:5,,,false
+qtpkitede,Deadeye (Pylon),,"dps,qtpkite",,FALSE
+qtpkitescourge,Scourge (Pylon),,"dps,qtpkite",,FALSE
+shpusher,Druid (Pusher),,"healer,shpusher,might",,FALSE
+dhuumkite,Offheal (Kiter),,"healer,dhuumkite,might",,FALSE
+shepi,Scourge (Epidemic),,"dps,epi",,FALSE
+mattreflect,DPS (Reflect),,mattreflect,,TRUE
+chronopull,Chrono pull (ctank or qchrono),,chronopull,,TRUE
+might,DPS (Might),,might,,TRUE
+handkite,Handkite,,handkite,,FALSE
+qadimkite,DPS (Kiter),,qadimkite,,FALSE
+qadimlamp,DPS (Lamp),,qadimlamp,,FALSE
+ctank,Chrono Tank,quickness:5,"tank,chronopull",FALSE,FALSE
+hfbtank,HFB Tank,quickness:5,"tank,healer,might",FALSE,FALSE
+qrappertank,Qrapper (Tank),quickness:5,tank,FALSE,FALSE
+qfbtank,Quickbrand (Tank),quickness:5,tank,FALSE,FALSE
+druidtank,Druid (Tank),,"tank,healer,might",,FALSE
+healtankalacmech,Heal Mechanist (Tank),alacrity:50,"tank,healer,might",FALSE,FALSE
+quickhealtank,Heal Tank Quickness,quickness:5,"tank,healer,might",TRUE,FALSE
+quicktank,Tank Quickness,quickness:5,"tank,chronopull",TRUE,FALSE
+alachealtank,Heal Tank Alacrity,alacrity:50,"tank,healer,might",TRUE,FALSE
+druid,Druid,,"healer,might",TRUE,FALSE
+hfb,Heal FB,quickness:5,"healer,might,mattreflect",FALSE,FALSE
+healscrapper,Heal Scrapper,quickness:5,healer,FALSE,FALSE
+healtempest,Heal Tempest,,"healer,might",FALSE,FALSE
+healalacmeach,Heal Mechanist,alacrity:50,"healer,might",FALSE,FALSE
+healalacmech,Heal Mechanist,alacrity:50,"healer,might",FALSE,FALSE
+alacheal,Heal Alacrity,alacrity:50,"healer,might",TRUE,FALSE
+quickheal,Heal Quickness,quickness:5,"healer,might",TRUE,FALSE
+qchrono,Quickchrono,quickness:5,"mattreflect,chronopull",FALSE,FALSE
+qrapper,Quick Scrapper,quickness:5,,FALSE,FALSE
+qfb,Quickbrand,quickness:5,,FALSE,FALSE
+bt,Boonthief,quickness:5,,,FALSE
+quickharbaebae,Quickbringer,quickness:5,,FALSE,FALSE
+quickdps,DPS Quickness,quickness:5,,TRUE,FALSE
+alacgade,Alacrigade,alacrity:50,,FALSE,FALSE
+alacspecter,Alac Specter,alacrity:50,,FALSE,FALSE
+condialacren,Condi Alac Renegade,alacrity:50,,FALSE,FALSE
+condialacmech,Condi Alac Mechanist,alacrity:50,might,FALSE,FALSE
+poweralacmech,Power Alac Mechanist,alacrity:50,might,FALSE,FALSE
+alacmech,DPS Alacrity Mechanist,alacrity:50,might,FALSE,FALSE
+poweralacren,Power Alac Renegade,alacrity:50,,FALSE,FALSE
+scam,SCAM,alacrity:50,mattreflect,FALSE,FALSE
+alacdps,DPS Alacrity,alacrity:50,might,TRUE,FALSE
+rrrenegade,RR Renegade,alacrity:25,,TRUE,FALSE
+banners,Banners,,banners,TRUE,FALSE
+dps,DPS,,dps,TRUE,TRUE

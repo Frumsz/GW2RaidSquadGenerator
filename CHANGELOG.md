@@ -1,3 +1,9 @@
+### 1.5.1 Frums
+Rewritten auto-assign to be usable both as autofiller and solution verifier, this means it should no longer come up with solutions that are impossible to split up into squads.
+The downside to this is that it makes finding a solution somewhat slower.
+
+- With druid being in a weird spot the squadmaker prefers but not requires having a druid, having none or having multiple are punished and those solutions are less likely to be picked. In case of a shortage of other healers it might still occur though.
+
 ### 1.4.0 Frums
 * Added the ability to add `forbidden` roles to squads to prevent them from being used in solutions
 * Added the ability to mark roles as `overflowable` which means you can never have too many of them
