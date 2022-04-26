@@ -32,6 +32,7 @@ qrapper,Quick Scrapper,quickness:5,,FALSE,FALSE
 qfb,Quickbrand,quickness:5,,FALSE,FALSE
 bt,Boonthief,quickness:5,,,FALSE
 quickharbaebae,Quickbringer,quickness:5,,FALSE,FALSE
+quickalyst,Quickalyst,quickness:5,,FALSE,FALSE
 quickdps,DPS Quickness,quickness:5,,TRUE,FALSE
 alacgade,Alacrigade,alacrity:50,,FALSE,FALSE
 alacspecter,Alac Specter,alacrity:50,,FALSE,FALSE
@@ -40,7 +41,8 @@ condialacmech,Condi Alac Mechanist,alacrity:50,might,FALSE,FALSE
 poweralacmech,Power Alac Mechanist,alacrity:50,might,FALSE,FALSE
 alacmech,DPS Alacrity Mechanist,alacrity:50,might,FALSE,FALSE
 poweralacren,Power Alac Renegade,alacrity:50,,FALSE,FALSE
-scam,SCAM,alacrity:50,mattreflect,FALSE,FALSE
+condialacwillybender,Condi Alac Willbender,alacrity:50,,FALSE,FALSE
+scam,SCAM,alacrity:50,"mattreflect,might",FALSE,FALSE
 alacdps,DPS Alacrity,alacrity:50,might,TRUE,FALSE
 rrrenegade,RR Renegade,alacrity:25,,TRUE,FALSE
 banners,Banners,,banners,TRUE,FALSE
