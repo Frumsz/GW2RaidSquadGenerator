@@ -1,7 +1,7 @@
 roleHandle,roleName,boons,specialRoles,commRole,overflowable
 qtpkitede,Deadeye (Pylon),,"dps,qtpkite",,FALSE
 qtpkitescourge,Scourge (Pylon),,"dps,qtpkite",,FALSE
-shpusher,Druid (Pusher),,"healer,shpusher,might",,FALSE
+shpusher,Druid (Pusher),alacrity:50,"healer,shpusher,might",,FALSE
 dhuumkite,Offheal (Kiter),,"healer,dhuumkite,might",,FALSE
 shepi,Scourge (Epidemic),,"dps,epi",,FALSE
 mattreflect,DPS (Reflect),,mattreflect,,TRUE
@@ -14,12 +14,12 @@ ctank,Chrono Tank,quickness:5,"tank,chronopull",FALSE,FALSE
 hfbtank,HFB Tank,quickness:5,"tank,healer,might",FALSE,FALSE
 qrappertank,Qrapper (Tank),quickness:5,tank,FALSE,FALSE
 qfbtank,Quickbrand (Tank),quickness:5,tank,FALSE,FALSE
-druidtank,Druid (Tank),,"tank,healer,might",,FALSE
+druidtank,Druid (Tank),alacrity:50,"tank,healer,might",,FALSE
 healtankalacmech,Heal Mechanist (Tank),alacrity:50,"tank,healer,might",FALSE,FALSE
 quickhealtank,Heal Tank Quickness,quickness:5,"tank,healer,might",TRUE,FALSE
 quicktank,Tank Quickness,quickness:5,"tank,chronopull",TRUE,FALSE
 alachealtank,Heal Tank Alacrity,alacrity:50,"tank,healer,might",TRUE,FALSE
-druid,Druid,,"healer,might",TRUE,FALSE
+druid,Druid,alacrity:50,"healer,might",TRUE,FALSE
 hfb,Heal FB,quickness:5,"healer,might,mattreflect",FALSE,FALSE
 healscrapper,Heal Scrapper,quickness:5,healer,FALSE,FALSE
 healtempest,Heal Tempest,,"healer,might",FALSE,FALSE
@@ -32,7 +32,6 @@ qrapper,Quick Scrapper,quickness:5,,FALSE,FALSE
 qfb,Quickbrand,quickness:5,,FALSE,FALSE
 bt,Boonthief,quickness:5,,,FALSE
 quickharbaebae,Quickbringer,quickness:5,,FALSE,FALSE
-quickalyst,Quickalyst,quickness:5,,FALSE,FALSE
 quickdps,DPS Quickness,quickness:5,,TRUE,FALSE
 alacgade,Alacrigade,alacrity:50,,FALSE,FALSE
 alacspecter,Alac Specter,alacrity:50,,FALSE,FALSE
@@ -41,8 +40,7 @@ condialacmech,Condi Alac Mechanist,alacrity:50,might,FALSE,FALSE
 poweralacmech,Power Alac Mechanist,alacrity:50,might,FALSE,FALSE
 alacmech,DPS Alacrity Mechanist,alacrity:50,might,FALSE,FALSE
 poweralacren,Power Alac Renegade,alacrity:50,,FALSE,FALSE
-condialacwillybender,Condi Alac Willbender,alacrity:50,,FALSE,FALSE
-scam,SCAM,alacrity:50,"mattreflect,might",FALSE,FALSE
+scam,SCAM,alacrity:50,mattreflect,FALSE,FALSE
 alacdps,DPS Alacrity,alacrity:50,might,TRUE,FALSE
 rrrenegade,RR Renegade,alacrity:25,,TRUE,FALSE
 banners,Banners,,banners,TRUE,FALSE
