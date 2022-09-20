@@ -332,16 +332,10 @@ public class SquadPlan {
 		// Prefer role compression, most new people learn bosses on dps, so try to fit the most dps
 		int notDpsPlayers = (int) assigned.values().stream().filter(r -> r.getDPS() == 0).count() * 10;
 
-		// Has exactly one druid healer, this is really helpfull still for beginner squads
-		int exactlyOneDruidHealer = (int) assigned.values().stream().filter(r -> "druid".equalsIgnoreCase(r.getRoleHandle())).count() == 1 ? 0 : 1000;
-
-		// If we have more than one druid, yeah that is not too great, it might lead to some grumpy people in trainerroom :D
-		int hasMoreThanOneDruid = (int) assigned.values().stream().filter(r -> "druid".equalsIgnoreCase(r.getRoleHandle())).count() > 1 ? 5000 : 0;
-
 		// However we want to try to get commanders on DPS if possible, so weigh it more heavily
 		int commNotAsDps = (int) assigned.entrySet().stream().filter(e -> e.getKey().isTrainer()).filter(r -> r.getValue().getDPS() == 0).count() * 100;
 
-		return notDpsPlayers + commNotAsDps + exactlyOneDruidHealer + hasMoreThanOneDruid;
+		return notDpsPlayers + commNotAsDps;
 	}
 
     /**

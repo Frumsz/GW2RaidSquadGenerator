@@ -19,7 +19,6 @@ healtankalacmech,Heal Mechanist (Tank),alacrity:50,"tank,healer,might",FALSE,FAL
 quickhealtank,Heal Tank Quickness,quickness:5,"tank,healer,might",TRUE,FALSE
 quicktank,Tank Quickness,quickness:5,"tank,chronopull",TRUE,FALSE
 alachealtank,Heal Tank Alacrity,alacrity:50,"tank,healer,might",TRUE,FALSE
-druid,Druid,alacrity:50,"healer,might",TRUE,FALSE
 hfb,Heal FB,quickness:5,"healer,might,mattreflect",FALSE,FALSE
 healscrapper,Heal Scrapper,quickness:5,healer,FALSE,FALSE
 healtempest,Heal Tempest,,"healer,might",FALSE,FALSE
@@ -42,6 +41,4 @@ alacmech,DPS Alacrity Mechanist,alacrity:50,might,FALSE,FALSE
 poweralacren,Power Alac Renegade,alacrity:50,,FALSE,FALSE
 scam,SCAM,alacrity:50,mattreflect,FALSE,FALSE
 alacdps,DPS Alacrity,alacrity:50,might,TRUE,FALSE
-rrrenegade,RR Renegade,alacrity:25,,TRUE,FALSE
-banners,Banners,,banners,TRUE,FALSE
 dps,DPS,,dps,TRUE,TRUE
