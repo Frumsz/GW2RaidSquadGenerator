@@ -10,12 +10,15 @@ might,DPS (Might),,might,,TRUE
 handkite,Handkite,,handkite,,FALSE
 qadimkite,DPS (Kiter),,qadimkite,,FALSE
 qadimlamp,DPS (Lamp),,qadimlamp,,FALSE
-ctank,Chrono Tank,quickness:5,"tank,chronopull",FALSE,FALSE
+ctank,Quickness Chronomancer Tank,quickness:5,"tank,chronopull",FALSE,FALSE
 hfbtank,HFB Tank,quickness:5,"tank,healer,might",FALSE,FALSE
 qrappertank,Qrapper (Tank),quickness:5,tank,FALSE,FALSE
 qfbtank,Quickbrand (Tank),quickness:5,tank,FALSE,FALSE
-druidtank,Druid (Tank),alacrity:50,"tank,healer,might",,FALSE
+druidtank,Druid (Tank),alacrity:50,"tank,healer,might",FALSE,FALSE
 healtankalacmech,Heal Mechanist (Tank),alacrity:50,"tank,healer,might",FALSE,FALSE
+healalactemptank,Heal Tempest (Tank),alacrity:50,"tank,healer,might",FALSE,FALSE
+alacmechtank,Alacrity Mechanist (Tank),alacrity:50,tank,FALSE,FALSE
+quickheraldtank,Quickness Herald (Tank),quickness:5,tank,FALSE,FALSE
 quickhealtank,Heal Tank Quickness,quickness:5,"tank,healer,might",TRUE,FALSE
 quicktank,Tank Quickness,quickness:5,"tank,chronopull",TRUE,FALSE
 alachealtank,Heal Tank Alacrity,alacrity:50,"tank,healer,might",TRUE,FALSE
