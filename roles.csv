@@ -45,3 +45,4 @@ poweralacren,Power Alac Renegade,alacrity:50,,FALSE,FALSE
 scam,SCAM,alacrity:50,mattreflect,FALSE,FALSE
 alacdps,DPS Alacrity,alacrity:50,might,TRUE,FALSE
 dps,DPS,,dps,TRUE,TRUE
+dhuumdruidkite, Druid (Kiter),alacrity:50,"healer,dhuumkite,might",,FALSE
